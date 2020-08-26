@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "improvdatabase": {
+      "hosting": {
+        "improvdatabase": [
+          "improvdatabase"
+        ]
+      }
+    }
+  }
+}
