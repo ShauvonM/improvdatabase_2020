@@ -129,5 +129,8 @@
       }
     }
   },
-  "defaultProject": "improvdatabase"
+  "defaultProject": "improvdatabase",
+  "cli": {
+    "analytics": "1219c9b8-9dd4-4afa-99bb-52d6f117259f"
+  }
 }

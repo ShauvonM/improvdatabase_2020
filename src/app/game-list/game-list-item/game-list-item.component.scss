@@ -1,0 +1,51 @@
+@import "../../../scss/colors";
+
+:host {
+  display: flex;
+  padding: 1rem 0;
+  flex-direction: row;
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+$avatar-size: 3rem;
+
+.avatar {
+  margin-right: 1rem;
+  width: $avatar-size;
+  min-width: $avatar-size;
+  height: $avatar-size;
+  border-radius: 50%;
+  background: $color-accent;
+  text-align: center;
+  line-height: $avatar-size;
+  color: $color-accent-contrast;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.column {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+h2 {
+  margin: 0;
+}
+
+.description {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+mat-chip {
+  cursor: pointer;
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}

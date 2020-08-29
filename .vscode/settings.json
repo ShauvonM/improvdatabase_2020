@@ -1,0 +1,46 @@
+{
+    "[bazel]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+        "editor.formatOnSave": true
+    },
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+        80
+    ],
+    "editor.tabSize": 2,
+    "files.associations": {
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "window.zoomLevel": 0,
+    "explorer.confirmDelete": false,
+    "extensions.ignoreRecommendations": false,
+    "python.linting.pylintPath": "/usr/bin/gpylint",
+    "python.linting.pycodestyleEnabled": false,
+    "python.linting.pylintArgs": ["--mode=style"],
+    "python.formatting.provider": "autopep8",
+    "editor.formatOnType": true,
+    "editor.formatOnPaste": false,
+  
+    "[html]": {
+      "editor.rulers": [100]
+    },
+    "html.format.wrapLineLength": 100,
+    "html.format.wrapAttributes": "force-aligned",
+    "html.format.enable": true,
+    "editor.suggestSelection": "first",
+    "python.jediEnabled": false,
+    "git.ignoreLimitWarning": true,
+    "python.autoComplete.extraPaths": [
+  
+  ],
+  "python.languageServer": "Microsoft",
+  }
+  

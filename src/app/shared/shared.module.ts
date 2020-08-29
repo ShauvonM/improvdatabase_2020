@@ -1,20 +1,15 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {MatToolbarModule} from '@angular/material/toolbar';
-
-const modules = [
-  MatToolbarModule
-];
-
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {ScrollTrackerDirective} from './scroll-tracker.directive';
 
 @NgModule({
-  declarations: [],
+  declarations: [ScrollTrackerDirective],
   imports: [
     CommonModule,
-    ...modules,
   ],
   exports: [
-    ...modules,
+    ScrollTrackerDirective,
   ]
 })
-export class SharedModule { }
+export class SharedModule {
+}

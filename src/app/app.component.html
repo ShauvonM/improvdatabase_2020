@@ -1,5 +1,93 @@
-<mat-toolbar color="primary">
+<mat-toolbar color="primary"
+             [class.active]="toolbarActive">
+  <button mat-icon-button
+          class="logo"
+          (click)="toggleSidenav()">
+    <img src="assets/favicon/android-chrome-192x192.png" />
+  </button>
   <h1>Improv Database</h1>
 </mat-toolbar>
 
-<router-outlet></router-outlet>
+<div class="main">
+  <div class="sidenav"
+       [class.open]="sidenavOpen">
+    <mat-nav-list class="top">
+
+      <a *ngIf="isLoggedIn"
+         mat-list-item
+         routerLink="home"
+         routerLinkActive="active">
+        <mat-icon>home</mat-icon>
+        <span>Home</span>
+      </a>
+
+      <a mat-list-item
+         routerLink="welcome"
+         routerLinkActive="active">
+        <mat-icon>pan_tool</mat-icon>
+        <span>Welcome</span>
+      </a>
+
+      <a mat-list-item
+         routerLink="news"
+         routerLinkActive="active">
+        <mat-icon>article</mat-icon>
+        <span>News</span>
+      </a>
+
+      <a mat-list-item
+         routerLink="games"
+         routerLinkActive="active">
+        <mat-icon>sports_kabaddi</mat-icon>
+        <span>Games</span>
+      </a>
+
+      <a mat-list-item
+         routerLink="games/random"
+         routerLinkActive="active">
+        <mat-icon>casino</mat-icon>
+        <span>Random Game</span>
+      </a>
+
+      <a mat-list-item
+         routerLink="about"
+         routerLinkActive="active">
+        <mat-icon>live_help</mat-icon>
+        <span>About</span>
+      </a>
+
+    </mat-nav-list>
+
+    <mat-divider></mat-divider>
+
+    <mat-nav-list class="bottom">
+
+      <a mat-list-item
+         *ngIf="!isLoggedIn"
+         (click)="openLogin()">
+        <mat-icon>login</mat-icon>
+        <span>{{loginString}}</span>
+      </a>
+
+      <a mat-list-item
+         *ngIf="isLoggedIn"
+         (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>{{logoutString}}</span>
+      </a>
+
+    </mat-nav-list>
+  </div>
+  <div class="sidenav-block"
+       [class.open]="sidenavOpen"></div>
+
+  <div class="content">
+    <div class="content-outlet">
+      <router-outlet></router-outlet>
+    </div>
+
+    <img src="assets/favicon/android-chrome-512x512.png"
+         class="corner-logo" />
+  </div>
+
+</div>

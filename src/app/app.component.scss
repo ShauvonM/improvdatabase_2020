@@ -1,0 +1,141 @@
+@import '../scss/colors';
+@import '~@angular/material/theming';
+
+.logo {
+  margin-right: 1rem;
+  img {
+    width: 1.5rem;
+  }
+}
+
+$toolbar-height: 4rem;
+
+mat-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 19;
+  @include mat-elevation(0);
+  @include mat-elevation-transition;
+
+  &.active {
+    @include mat-elevation(4);
+  }
+}
+
+mat-sidenav-container {
+  // the toolbar is 64px tall.
+  min-height: calc(100% - $toolbar-height);
+
+  mat-sidenav {
+    mat-nav-list {
+      min-width: 15rem;
+
+      a {
+        padding: 0 .5rem;
+
+        &.active {
+          background: $color-active;
+        }
+
+        mat-icon {
+          margin-right: 1rem;
+        }
+      }
+    }
+  }
+}
+
+$sidenav-transition-duration: 300ms;
+$sidenav-item-open-width: 10rem;
+
+.main {
+  // the toolbar is 64px tall.
+  min-height: 100%;
+  box-sizing: border-box;
+  padding-top: $toolbar-height;
+  display: flex;
+  flex-direction: row;
+
+  .sidenav {
+    border-right: 1px solid $color-divider;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: $toolbar-height;
+    bottom: 0;
+    left: 0;
+    background: white;
+    z-index: 18;
+
+    .top {
+      flex-grow: 1;
+    }
+
+    a {
+      padding: 0;
+      box-sizing: border-box;
+      transition: padding $sidenav-transition-duration;
+
+      span {
+        width: 0;
+        overflow: hidden;
+        transition: width $sidenav-transition-duration;
+        white-space: nowrap;
+      }
+
+      &.active {
+        background: $color-active;
+      }
+
+      mat-icon {
+        margin: 0;
+        transition: margin $sidenav-transition-duration;
+      }
+    }
+
+    &.open {
+      a {
+        padding: 0 .5rem;
+
+        span {
+          width: $sidenav-item-open-width;
+        }
+
+        mat-icon {
+          margin-right: 1rem;
+        }
+      }
+    }
+  }
+
+  .sidenav-block {
+    width: 3.5rem;
+    transition: width $sidenav-transition-duration;
+
+    &.open {
+      width: 4.5rem + $sidenav-item-open-width;
+    }
+  }
+
+  .content {
+    flex-grow: 1;
+    background: $color-bg;
+    position: relative;
+    z-index: 1;
+
+    .content-outlet {
+      position: relative;
+      z-index: 2;
+    }
+
+    .corner-logo {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      z-index: 1;
+      opacity: .5;
+    }
+  }
+}

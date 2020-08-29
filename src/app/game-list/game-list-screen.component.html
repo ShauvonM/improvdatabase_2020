@@ -1,0 +1,112 @@
+<div class="screen-margin"></div>
+
+<div class="screen-content">
+
+  <div class="tools"
+       *ngIf="durations$ | async">
+    <mat-chip-list aria-label="Selected filters">
+      <mat-chip *ngFor="let filter of filters"
+                (click)="removeFilter(filter)">
+        <mat-icon *ngIf="filter.type === 'playerCount'">group</mat-icon>
+        <mat-icon *ngIf="filter.type === 'duration'">timer</mat-icon>
+        <span>{{filter.name}}</span>
+        <mat-icon matChipRemove
+                  (click)="removeFilter(filter)">cancel</mat-icon>
+      </mat-chip>
+
+      <button mat-button
+              [matMenuTriggerFor]="filterMenu">
+        <mat-icon>filter_alt</mat-icon>
+        <span>Add Filter</span>
+      </button>
+
+      <button mat-icon-button
+              aria-label="Info about filters"
+              matTooltip="Selecting multiple things will show results matching either of them. Also note that you can't combine tags with other filters, so if you select a tag it will clear anything else.">
+        <mat-icon>help_outline</mat-icon>
+      </button>
+    </mat-chip-list>
+
+    <mat-menu #filterMenu="matMenu">
+      <button mat-menu-item
+              [matMenuTriggerFor]="durationMenu">
+        <mat-icon>timer</mat-icon>
+        <span>Duration</span>
+      </button>
+      <button mat-menu-item
+              [matMenuTriggerFor]="playerCountMenu">
+        <mat-icon>group</mat-icon>
+        <span>Player Count</span>
+      </button>
+      <button mat-menu-item
+              [matMenuTriggerFor]="tagMenu">
+        <mat-icon>local_offer</mat-icon>
+        <span>Tag</span>
+      </button>
+    </mat-menu>
+
+    <mat-menu #durationMenu="matMenu">
+      <button mat-menu-item
+              *ngFor="let duration of durations$ | async"
+              [matTooltip]="duration.description"
+              matTooltipPosition="right"
+              (click)="addFilter(duration)">
+        {{duration.name}}
+      </button>
+    </mat-menu>
+
+    <mat-menu #playerCountMenu="matMenu">
+      <button mat-menu-item
+              *ngFor="let playerCount of playerCounts$ | async"
+              [matTooltip]="playerCount.description"
+              matTooltipPosition="right"
+              (click)="addFilter(playerCount)">
+        ({{playerCount.min || '?'}} to {{playerCount.max || '?'}}) {{playerCount.name}}
+      </button>
+    </mat-menu>
+
+    <mat-menu #tagMenu="matMenu">
+      <button mat-menu-item
+              *ngFor="let tag of tags$ | async"
+              [matTooltip]="tag.description"
+              matTooltipPosition="right"
+              (click)="addTagFilter(tag)">
+        {{tag.name}}
+      </button>
+    </mat-menu>
+  </div>
+
+  <mat-card>
+  <div class="game-list">
+    <ng-container *ngFor="let games$ of gamePages; index as page">
+      <ng-container *ngIf="games$ | async as games; else loading">
+        <ng-container *ngFor="let game of games; trackBy: gameTrackBy">
+          <app-game-list-item (click)="selectGame($event, game)"
+                              (mousedown)="gameMouseDown($event, game)"
+                              (mouseup)="gameMouseUp($event, game)"
+                              [game]="game">
+          </app-game-list-item>
+          <div class="divider" *ngIf="games.length > 1"></div>
+        </ng-container>
+
+        <div *ngIf="page == gamePages.length - 1 && theresMore"
+             [scrollTracker]
+             (appear)="loadPage(games)"
+             class="theres-more">There's more . . .</div>
+
+        <div *ngIf="page == gamePages.length - 1 && !theresMore"
+             class="theres-more">end of line</div>
+
+      </ng-container>
+    </ng-container>
+  </div>
+</mat-card>
+
+</div>
+
+<div class="screen-margin"></div>
+
+
+<ng-template #loading>
+  <mat-spinner></mat-spinner>
+</ng-template>

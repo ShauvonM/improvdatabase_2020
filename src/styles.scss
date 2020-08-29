@@ -4,6 +4,8 @@
 @import '~@angular/material/theming';
 // Plus imports for other components in your app.
 
+@import 'scss/colors';
+
 $font-family: Lato, "Helvetica Neue", sans-serif;
 
 $custom-typography: mat-typography-config(
@@ -17,24 +19,7 @@ $custom-typography: mat-typography-config(
 // Be sure that you only ever include this mixin once!
 @include mat-core($custom-typography);
 
-// Define the palettes for your theme using the Material Design palettes available in palette.scss
-// (imported above). For each palette, you can optionally specify a default, lighter, and darker
-// hue. Available color palettes: https://material.io/design/color/
-$improvdatabase-primary: mat-palette($mat-green, 900);
-$improvdatabase-accent: mat-palette($mat-yellow);
-
-// The warn palette is optional (defaults to red).
-$improvdatabase-warn: mat-palette($mat-red);
-
-// Create the theme object. A theme consists of configurations for individual
-// theming systems such as "color" or "typography".
-$improvdatabase-theme: mat-light-theme((
-  color: (
-    primary: $improvdatabase-primary,
-    accent: $improvdatabase-accent,
-    warn: $improvdatabase-warn,
-  )
-));
+// Colors and theme are defined in scss/colors;
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -62,5 +47,121 @@ body { margin: 0; font-family: $font-family; }
     width: 100%;
     max-width: 52.5rem;
     box-sizing: border-box;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.mat-tooltip {
+  font-size: 1rem !important;
+}
+
+.mat-dialog-actions {
+  justify-content: flex-end;
+}
+
+.cdk-overlay-pane.error {
+  animation: shakedialog 500ms both;
+}
+
+.cdk-overlay-pane.runaway {
+  position: relative !important;
+  animation: runaway 3s 2s both, runawaymotion 3s 2s both linear;
+}
+
+@keyframes shakedialog {
+  0%, 100% {
+      transform: translateX(0);
+  }
+  10%, 50%, 90% {
+      transform: translateX(1rem);
+  }
+  30%, 70% {
+      transform: translateX(-1rem);
+  }
+}
+
+@keyframes starburst {
+  0% {
+      transform: translateX(12px) translateY(-112px) scale(0) rotateZ(0);
+  }
+  50% {
+      transform: translateX(12px) translateY(-112px) scale(1) rotateZ(180deg);
+  }
+  100% {
+      transform: translateX(12px) translateY(-112px) scale(0) rotateZ(360deg);
+  }
+}
+@keyframes runaway {
+  0% {
+      transform: scale(1) rotateZ(0);
+  }
+  100% {
+      transform: scale(0) rotateZ(560deg);
+  }
+}
+@keyframes runawaymotion {
+  0% {
+      left: 0px;
+      top: 0px;
+  }
+  10% {
+      left: 18px;
+      top: 27px;
+  }
+  20% {
+      left: 39px;
+      top: 46px;
+  }
+  25% {
+      left: 54px;
+      top: 52px;
+  }
+  30% {
+      left: 69px;
+      top: 56px;
+  }
+  35% {
+      left: 87px;
+      top: 51px;
+  }
+  40% {
+      left: 99px;
+      top: 45px;
+  }
+  50% {
+      left: 119px;
+      top: 27px;
+  }
+  55% {
+      left: 129px;
+      top: 9px;
+  }
+  60% {
+      left: 132px;
+      top: -6px;
+  }
+  65% {
+      left: 126px;
+      top: -27px;
+  }
+  70% {
+      left: 119px;
+      top: -37px;
+  }
+  80% {
+      left: 91px;
+      top: -66px;
+  }
+  90% {
+      left: 54px;
+      top: -91px;
+  }
+  100% {
+      left: 12px;
+      top: -112px;
   }
 }
