@@ -99,10 +99,10 @@ export class GamesService {
   }
 
   fetchGamePage(startAfter?: string): Observable<Game[]> {
-    return combineLatest(
-               this.metadataFilter$,
-               this.tagFilter$,
-               )
+    return combineLatest([
+             this.metadataFilter$,
+             this.tagFilter$,
+           ])
         .pipe(
             debounceTime(5),
             tap(([metadataFilters, tagFilters]) => {
@@ -149,60 +149,66 @@ export class GamesService {
         );
   }
 
+  fetchGame(slug: string): Observable<Game> {
+    return this.firestore.collection<GameResponse>(
+        COLLECTIONS.GAMES, ref => {let query = ref.get()})
+  }
+
   private fetchGameData(
       metadataFilters: GameMetadata[], tagFilters: Tag[], startAfter?: string):
       Observable<
           [DocumentChangeAction<GameResponse>[], Map<string, GameMetadata>]> {
-    return combineLatest(
-        this.firestore
-            .collection<GameResponse>(
-                COLLECTIONS.GAMES,
-                ref => {
-                  // Set up the Firestore query...
-                  let query = ref.orderBy('name')
-                                  .orderBy('dateModified', 'desc')
-                                  .where('isDeleted', '==', false);
-                  if (metadataFilters && metadataFilters.length) {
-                    const playerCounts =
-                        metadataFilters.filter(f => f.type === 'playerCount');
-                    const durations =
-                        metadataFilters.filter(f => f.type === 'duration');
-                    if (playerCounts.length) {
-                      query = query.where(
-                          'playerCount', 'in',
-                          playerCounts.map(
-                              m => this.firestore
-                                       .collection(COLLECTIONS.METADATAS)
-                                       .doc(m.id)
-                                       .ref));
-                    }
-                    if (durations.length) {
-                      query = query.where(
-                          'duration', 'in',
-                          durations.map(
-                              m => this.firestore
-                                       .collection(COLLECTIONS.METADATAS)
-                                       .doc(m.id)
-                                       .ref));
-                    }
-                  }
-                  if (tagFilters && tagFilters.length) {
+    return combineLatest([
+      this.firestore
+          .collection<GameResponse>(
+              COLLECTIONS.GAMES,
+              ref => {
+                // Set up the Firestore query...
+                let query = ref.orderBy('name')
+                                .orderBy('dateModified', 'desc')
+                                .where('isDeleted', '==', false);
+                if (metadataFilters && metadataFilters.length) {
+                  const playerCounts =
+                      metadataFilters.filter(f => f.type === 'playerCount');
+                  const durations =
+                      metadataFilters.filter(f => f.type === 'duration');
+                  if (playerCounts.length) {
                     query = query.where(
-                        'tags', 'array-contains-any',
-                        tagFilters.map(
-                            t => this.firestore.collection(COLLECTIONS.TAGS)
-                                     .doc(t.id)
-                                     .ref))
+                        'playerCount', 'in',
+                        playerCounts.map(
+                            m =>
+                                this.firestore.collection(COLLECTIONS.METADATAS)
+                                    .doc(m.id)
+                                    .ref));
                   }
-                  if (startAfter) {
-                    query = query.startAfter(startAfter);
+                  if (durations.length) {
+                    query = query.where(
+                        'duration', 'in',
+                        durations.map(
+                            m =>
+                                this.firestore.collection(COLLECTIONS.METADATAS)
+                                    .doc(m.id)
+                                    .ref));
                   }
-                  console.log('query', query);
-                  return query.limit(PAGE_SIZE);
-                })
-            .snapshotChanges(),
-        // Include all of the metadata items.
-        this.getMetadatas())
+                }
+                if (tagFilters && tagFilters.length) {
+                  query = query.where(
+                      'tags', 'array-contains-any',
+                      tagFilters.map(
+                          t => this.firestore.collection(COLLECTIONS.TAGS)
+                                   .doc(t.id)
+                                   .ref))
+                }
+                if (startAfter) {
+                  query = query.startAfter(startAfter);
+                }
+                console.log('query', query);
+                return query.limit(PAGE_SIZE);
+              })
+          .snapshotChanges(),
+      // Include all of the metadata items.
+      this.getMetadatas()
+    ])
   }
 
   private translateSnapshot<T>(s: DocumentChangeAction<T>): T {
@@ -292,7 +298,7 @@ export class GamesService {
           })));
     }
 
-    return combineLatest(...metaObservables);
+    return combineLatest(metaObservables);
   }
 
   getMetadatas(): Observable<Map<string, GameMetadata>> {
