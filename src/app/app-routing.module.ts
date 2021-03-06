@@ -11,6 +11,6 @@ const routes: Routes = [
   {path: 'games/:slug', component: GameDetailsScreenComponent}
 ];
 
-@NgModule({imports: [RouterModule.forRoot(routes)], exports: [RouterModule]})
+@NgModule({imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })], exports: [RouterModule]})
 export class AppRoutingModule {
 }
