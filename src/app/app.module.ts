@@ -23,7 +23,10 @@ import {WelcomeModule} from './welcome/welcome.module';
 
 
 @NgModule({
-  declarations: [AppComponent, LoginDialogComponent],
+  declarations: [
+    AppComponent,
+    LoginDialogComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,

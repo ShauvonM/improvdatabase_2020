@@ -1,9 +1,11 @@
 import {Component} from '@angular/core';
 import {AngularFireAuth} from '@angular/fire/auth';
 import {MatDialog} from '@angular/material/dialog';
+import firebase from 'firebase/app';
 import {fromEvent} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {LoginDialogComponent} from './login-dialog/login-dialog.component';
+
 
 const TOOBLAR_ACTIVE_POSITION = 16 * 4;
 

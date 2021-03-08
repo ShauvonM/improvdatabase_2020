@@ -1,9 +1,13 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
 import {ScrollTrackerDirective} from './scroll-tracker.directive';
+import { StripTagsPipe } from './strip-tags.pipe';
 
 @NgModule({
-  declarations: [ScrollTrackerDirective],
+  declarations: [
+    ScrollTrackerDirective,
+    StripTagsPipe,
+  ],
   imports: [
     CommonModule,
   ],

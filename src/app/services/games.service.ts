@@ -150,8 +150,36 @@ export class GamesService {
   }
 
   fetchGame(slug: string): Observable<Game> {
-    return this.firestore.collection<GameResponse>(
-        COLLECTIONS.GAMES, ref => {let query = ref.get()})
+    return combineLatest([
+             this.firestore
+                 .collection<GameResponse>(
+                     COLLECTIONS.GAMES,
+                     ref => ref.where('slug', '==', slug).limit(1))
+                 .valueChanges({idField: 'id'}),
+             this.getMetadatas()
+           ])
+        .pipe(
+            switchMap(
+                ([
+                  games,
+                  metamap,
+                ]) =>
+                    this.switchResponseToClass<GameResponse, Game>(
+                        games, game => {
+                          return {
+                            playerCount: game.playerCount ?
+                                metamap.get(game.playerCount.id) :
+                                null,
+                                duration: game.duration ?
+                                metamap.get(game.duration.id) :
+                                null,
+                                tags: [],
+                          }
+                        })),
+            map(games => {
+              console.log(games);
+              return games[0];
+            }));
   }
 
   private fetchGameData(

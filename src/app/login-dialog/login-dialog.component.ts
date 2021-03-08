@@ -1,7 +1,7 @@
 import {Component, Inject} from '@angular/core';
 import {AngularFireAuth} from '@angular/fire/auth';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
-import {auth} from 'firebase/app';
+import firebase from 'firebase/app';
 import {Subscription} from 'rxjs';
 
 import {createToggle} from '../shared/anim';
@@ -57,7 +57,7 @@ export class LoginDialogComponent {
 
   doGoogle(e: MouseEvent) {
     e.stopPropagation();
-    this.auth.signInWithPopup(new auth.GoogleAuthProvider());
+    this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
   }
 
   doLogin(e: MouseEvent) {
