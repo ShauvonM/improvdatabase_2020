@@ -1,24 +1,28 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, DocumentChangeAction, DocumentReference} from '@angular/fire/firestore';
+import firebase from 'firebase/app';
 import {BehaviorSubject, combineLatest, Observable, of, Subject} from 'rxjs';
 import {debounceTime, map, switchMap, tap} from 'rxjs/operators';
-import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, Tag, TagResponse, User} from '../shared/types';
+import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, Name, NameResponse, Note, NoteResponse, ParentType, Tag, TagResponse, User} from '../shared/types';
 
 
-const COLLECTIONS = {
+export const COLLECTIONS = {
   GAMES: 'games',
+  NAMES: 'names',
   METADATAS: 'gamemetadatas',
   HISTORY: 'histories',
   INVITES: 'invites',
   NOTES: 'notes',
   TAGS: 'tags',
   TEAMS: 'teams',
-  USERS: 'users',
+  USERS: 'users'
 };
 
 const LS_FILTERS = 'gameListFilters'
 
 const PAGE_SIZE = 20;
+
+export const RANDOM = 'random';
 
 @Injectable({providedIn: 'root'})
 export class GamesService {
@@ -150,35 +154,147 @@ export class GamesService {
   }
 
   fetchGame(slug: string): Observable<Game> {
+    let randomId;
+    if (slug === RANDOM) {
+      randomId = this.firestore.createId();
+      console.log('random id', randomId);
+    }
+
     return combineLatest([
              this.firestore
                  .collection<GameResponse>(
                      COLLECTIONS.GAMES,
-                     ref => ref.where('slug', '==', slug).limit(1))
+                     ref => {
+                       if (slug === RANDOM) {
+                         return ref
+                             .where(
+                                 firebase.firestore.FieldPath.documentId(),
+                                 '>=', randomId)
+                             .limit(1)
+                       } else {
+                         return ref.where('slug', '==', slug).limit(1);
+                       }
+                     })
                  .valueChanges({idField: 'id'}),
              this.getMetadatas()
            ])
         .pipe(
+            switchMap(([games, metamap]) => {
+              if (!games.length && slug === RANDOM) {
+                console.log('>= did not match');
+                return this.firestore
+                    .collection<GameResponse>(
+                        COLLECTIONS.GAMES,
+                        ref => {
+                            return ref
+                                .where(
+                                    firebase.firestore.FieldPath.documentId(),
+                                    '<', randomId)
+                                .limit(1)})
+                    .valueChanges({idField: 'id'})
+                    .pipe(map(games => {
+                      return {games, metamap};
+                    }));
+              }
+
+              return of({games, metamap});
+            }),
             switchMap(
-                ([
+                ({
                   games,
                   metamap,
-                ]) =>
+                }) =>
                     this.switchResponseToClass<GameResponse, Game>(
-                        games, game => {
-                          return {
-                            playerCount: game.playerCount ?
-                                metamap.get(game.playerCount.id) :
-                                null,
-                                duration: game.duration ?
-                                metamap.get(game.duration.id) :
-                                null,
-                                tags: [],
-                          }
+                        games,
+                        game => {
+                          const playerCount = game.playerCount ?
+                              metamap.get(game.playerCount.id) :
+                              null;
+                          const duration = game.duration ?
+                              metamap.get(game.duration.id) :
+                              null;
+                          return {playerCount, duration};
                         })),
             map(games => {
-              console.log(games);
+              console.log('game data', games[0]);
               return games[0];
+            }));
+  }
+
+  fetchNames(game: Game): Observable<Name[]> {
+    return this.firestore
+        .collection<NameResponse>(
+            `${COLLECTIONS.GAMES}/${game.id}/${COLLECTIONS.NAMES}`)
+        .valueChanges({idField: 'id'})
+        .pipe(switchMap(
+            nameResponses =>
+                this.switchResponseToClass<NameResponse, Name>(nameResponses)));
+  }
+
+  fetchNotes(game: Game): Observable<Note[]> {
+    let noteResponsesTmp: NoteResponse[];
+    return this.firestore
+        .collection<NoteResponse>(
+            COLLECTIONS.NOTES,
+            ref => {
+              let query = ref.orderBy('dateModified', 'desc')
+                              .where('isDeleted', '==', false);
+              const parents: DocumentReference[] = [];
+              parents.push(
+                  this.firestore.doc(`/${COLLECTIONS.GAMES}/${game.id}`).ref);
+              parents.push(
+                  this.firestore
+                      .doc(`/${COLLECTIONS.METADATAS}/${game.duration.id}`)
+                      .ref);
+              parents.push(
+                  this.firestore
+                      .doc(`/${COLLECTIONS.METADATAS}/${game.playerCount.id}`)
+                      .ref);
+              for (const tag of game.tags) {
+                parents.push(
+                    this.firestore.doc(`/${COLLECTIONS.TAGS}/${tag.id}`).ref);
+              }
+              query = query.where('parent', 'in', parents);
+              return query;
+            })
+        .valueChanges({idField: 'id'})
+        .pipe(
+            switchMap(noteResponses => {
+              noteResponsesTmp = noteResponses;
+              const parents: Observable<ParentType>[] = [];
+              for (const noteResponse of noteResponses) {
+                const path = noteResponse.parent.path;
+                const collection = path.split('/')[0];
+                let obs: Observable<ParentType>;
+                switch (collection) {
+                  case COLLECTIONS.TAGS:
+                    obs = this.getTag(noteResponse.parent);
+                    break;
+                  case COLLECTIONS.GAMES:
+                    obs = of(game);
+                    break;
+                  case COLLECTIONS.METADATAS:
+                    obs = this.getMetadata(noteResponse.parent);
+                    break;
+                  default:
+                    break;
+                }
+                if (obs) {
+                  parents.push(obs);
+                }
+              }
+              return combineLatest(parents);
+            }),
+            switchMap((parents) => {
+              return this.switchResponseToClass<NoteResponse, Note>(
+                  noteResponsesTmp, (noteResponse: NoteResponse) => {
+                    const parent =
+                        parents.find(p => p.id === noteResponse.parent.id);
+                    return {
+                      parent,
+                      parentCollection: noteResponse.parent.path.split('/')[0]
+                    };
+                  });
             }));
   }
 
@@ -230,7 +346,6 @@ export class GamesService {
                 if (startAfter) {
                   query = query.startAfter(startAfter);
                 }
-                console.log('query', query);
                 return query.limit(PAGE_SIZE);
               })
           .snapshotChanges(),
@@ -249,7 +364,7 @@ export class GamesService {
     return snapshots.map(s => this.translateSnapshot(s));
   }
 
-  private getTag(ref: DocumentReference): Observable<Tag> {
+  getTag(ref: DocumentReference): Observable<Tag> {
     if (!ref) {
       return of(null);
     }
@@ -274,7 +389,7 @@ export class GamesService {
     return this.tagmap.get(id);
   }
 
-  private getUser(ref: DocumentReference): Observable<User> {
+  getUser(ref: DocumentReference): Observable<User> {
     if (!ref) {
       return of(null);
     }
@@ -351,6 +466,11 @@ export class GamesService {
                   }));
     }
     return this.metadatas$;
+  }
+
+  getMetadata(ref: DocumentReference): Observable<GameMetadata> {
+    return this.getMetadatas().pipe(
+        map(metadataMap => metadataMap.get(ref.id)));
   }
 
   getTags(): Observable<Tag[]> {

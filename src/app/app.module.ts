@@ -15,17 +15,18 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {environment} from 'src/environments/environment';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
-import {GameDetailsModule} from './game-details/game-details.module';
 import {GameListModule} from './game-list/game-list.module';
 import {LoginDialogComponent} from './login-dialog/login-dialog.component';
 import {SharedModule} from './shared/shared.module';
 import {WelcomeModule} from './welcome/welcome.module';
+import { SuperAdminScreenComponent } from './super-admin-screen/super-admin-screen.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginDialogComponent,
+    SuperAdminScreenComponent,
   ],
   imports: [
     BrowserModule,
@@ -36,7 +37,6 @@ import {WelcomeModule} from './welcome/welcome.module';
     BrowserAnimationsModule,
     WelcomeModule,
     GameListModule,
-    GameDetailsModule,
     SharedModule,
     MatToolbarModule,
     MatSidenavModule,

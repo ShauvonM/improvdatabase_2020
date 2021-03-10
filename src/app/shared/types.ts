@@ -13,6 +13,7 @@ export interface Base {
   dateDeleted?: Time;
   description?: string;
   isDeleted: boolean;
+  mongoID?: string;
 }
 
 export interface BaseResponse extends Base {
@@ -102,3 +103,18 @@ export interface BaseGameMetadata {
 export interface GameMetadataResponse extends BaseGameMetadata, BaseResponse {}
 
 export interface GameMetadata extends BaseGameMetadata, BaseClass {}
+
+export interface BaseNote extends Base {
+  public: boolean;
+}
+
+export interface NoteResponse extends BaseNote, BaseResponse {
+  parent: DocumentReference;
+}
+
+export type ParentType = Tag|GameMetadata|Game;
+
+export interface Note extends BaseClass, BaseNote {
+  parentCollection: string;
+  parent: ParentType;
+}

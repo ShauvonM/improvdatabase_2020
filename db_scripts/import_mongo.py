@@ -1,10 +1,10 @@
-import pymongo
+# import pymongo
 import os
 import re
 import datetime
 
-from pymongo import MongoClient
-from bson import objectid
+# from pymongo import MongoClient
+# from bson import objectid
 
 import firebase_admin
 from firebase_admin import credentials
@@ -13,12 +13,12 @@ from firebase_admin import firestore
 from dotenv import load_dotenv
 load_dotenv()
 
-mongo_client = MongoClient(os.getenv('MONGO_HOST', ''),
-                           int(os.getenv('MONGO_PORT', '0')))
+# mongo_client = MongoClient(os.getenv('MONGO_HOST', ''),
+#                            int(os.getenv('MONGO_PORT', '0')))
 
-database = mongo_client[os.getenv('MONGO_DB', '')]
+# database = mongo_client[os.getenv('MONGO_DB', '')]
 
-database.authenticate(os.getenv('MONGO_USER', ''), os.getenv('MONGO_PASS', ''))
+# database.authenticate(os.getenv('MONGO_USER', ''), os.getenv('MONGO_PASS', ''))
 
 cred = credentials.Certificate(os.getenv('FIREBASE_CERT', ''))
 firebase_admin.initialize_app(cred)
@@ -37,6 +37,9 @@ collection_blacklist = [
     'system.indexes',
     'contacts',
     'dbinfos',
+    'invites',
+    'purchases',
+    'subscriptions',
 
     # Too huge
     'histories'
@@ -103,6 +106,11 @@ def get_vals(doc, addl_key_blacklist=[]):
     else:
         vals['isDeleted'] = False
     return vals
+
+
+def full_delete():
+    collections = fbdb.collections()
+    print(collections)
 
 
 def full_import(collections=None):
@@ -184,14 +192,14 @@ def set_slugs():
     for game in games:
         gameref = game.reference
         try:
-          name = game.get('name')
-          slug = name.replace(' ', '-').lower()
-          slug = slug_re.sub("", slug)
-          gameref.update({'slug': slug})
+            name = game.get('name')
+            slug = name.replace(' ', '-').lower()
+            slug = slug_re.sub("", slug)
+            gameref.update({'slug': slug})
         except KeyError:
-          print('A game is missing a name: {}'.format(gameref.path))
+            print('A game is missing a name: {}'.format(gameref.path))
 
 
 # full_import()
 # set_names()
-set_slugs()
+# set_slugs()

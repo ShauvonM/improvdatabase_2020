@@ -1,12 +1,56 @@
 @import "../../../scss/colors";
 
-:host {
-  display: flex;
+:host.list-item {
   padding: 1rem 0;
-  flex-direction: row;
 
   &:first-child {
     padding-top: 0;
+  }
+}
+
+.list-item-content {
+  display: flex;
+  // padding: 1rem 0;
+  flex-direction: row;
+
+  h2 {
+    margin: 0;
+  }
+
+  .description {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  mat-chip {
+    cursor: pointer;
+  }
+
+  .column {
+    overflow: hidden;
+  }
+}
+
+.screen-content {
+  position: relative;
+
+  h2 {
+    font-size: 2rem;
+    margin: 0.5rem 0;
+  }
+
+  .description {
+    margin: 1rem 0;
+  }
+
+  .avatar {
+    position: absolute;
+    right: 100%;
+  }
+
+  mat-accordion {
+    margin-top: 1rem;
   }
 }
 
@@ -30,22 +74,47 @@ $avatar-size: 3rem;
 
 .column {
   flex-grow: 1;
-  overflow: hidden;
-}
-
-h2 {
-  margin: 0;
-}
-
-.description {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 mat-chip {
-  cursor: pointer;
   mat-icon {
     margin-right: 0.5rem;
+  }
+}
+
+.aka-name-list {
+  width: 100%;
+
+  mat-chip {
+    margin-right: 1rem;
+  }
+
+  mat-form-field {
+    margin-left: 0.5rem;
+  }
+}
+
+.note-list {
+  .note {
+    margin-bottom: 2rem;
+
+    .description {
+      margin: 0;
+    }
+
+    .label {
+      span {
+        vertical-align: middle;
+      }
+      mat-icon,
+      mat-chip {
+        vertical-align: middle;
+        margin: 0 0.5rem;
+      }
+    }
+    .username {
+      text-align: right;
+      width: 100%;
+    }
   }
 }

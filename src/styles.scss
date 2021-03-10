@@ -1,15 +1,14 @@
-
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
-@import '~@angular/material/theming';
+@import "~@angular/material/theming";
 // Plus imports for other components in your app.
 
-@import 'scss/colors';
+@import "scss/colors";
 
 $font-family: Lato, "Helvetica Neue", sans-serif;
 
 $custom-typography: mat-typography-config(
-  $font-family: $font-family
+  $font-family: $font-family,
 );
 
 @include mat-base-typography($custom-typography);
@@ -28,8 +27,14 @@ $custom-typography: mat-typography-config(
 
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: $font-family; }
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: $font-family;
+}
 
 .screen {
   display: flex;
@@ -63,6 +68,22 @@ body { margin: 0; font-family: $font-family; }
   justify-content: flex-end;
 }
 
+/* Styles for main site content. */
+.screen-content {
+  blockquote,
+  code {
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-left: 0.25rem solid rgba(0, 0, 0, 0.3);
+    max-width: 37rem;
+    margin: 0 auto 1rem;
+
+    p:last-child {
+      margin: 0;
+    }
+  }
+}
+
 .cdk-overlay-pane.error {
   animation: shakedialog 500ms both;
 }
@@ -73,95 +94,99 @@ body { margin: 0; font-family: $font-family; }
 }
 
 @keyframes shakedialog {
-  0%, 100% {
-      transform: translateX(0);
+  0%,
+  100% {
+    transform: translateX(0);
   }
-  10%, 50%, 90% {
-      transform: translateX(1rem);
+  10%,
+  50%,
+  90% {
+    transform: translateX(1rem);
   }
-  30%, 70% {
-      transform: translateX(-1rem);
+  30%,
+  70% {
+    transform: translateX(-1rem);
   }
 }
 
 @keyframes starburst {
   0% {
-      transform: translateX(12px) translateY(-112px) scale(0) rotateZ(0);
+    transform: translateX(12px) translateY(-112px) scale(0) rotateZ(0);
   }
   50% {
-      transform: translateX(12px) translateY(-112px) scale(1) rotateZ(180deg);
+    transform: translateX(12px) translateY(-112px) scale(1) rotateZ(180deg);
   }
   100% {
-      transform: translateX(12px) translateY(-112px) scale(0) rotateZ(360deg);
+    transform: translateX(12px) translateY(-112px) scale(0) rotateZ(360deg);
   }
 }
 @keyframes runaway {
   0% {
-      transform: scale(1) rotateZ(0);
+    transform: scale(1) rotateZ(0);
   }
   100% {
-      transform: scale(0) rotateZ(560deg);
+    transform: scale(0) rotateZ(560deg);
   }
 }
 @keyframes runawaymotion {
   0% {
-      left: 0px;
-      top: 0px;
+    left: 0px;
+    top: 0px;
   }
   10% {
-      left: 18px;
-      top: 27px;
+    left: 18px;
+    top: 27px;
   }
   20% {
-      left: 39px;
-      top: 46px;
+    left: 39px;
+    top: 46px;
   }
   25% {
-      left: 54px;
-      top: 52px;
+    left: 54px;
+    top: 52px;
   }
   30% {
-      left: 69px;
-      top: 56px;
+    left: 69px;
+    top: 56px;
   }
   35% {
-      left: 87px;
-      top: 51px;
+    left: 87px;
+    top: 51px;
   }
   40% {
-      left: 99px;
-      top: 45px;
+    left: 99px;
+    top: 45px;
   }
   50% {
-      left: 119px;
-      top: 27px;
+    left: 119px;
+    top: 27px;
   }
   55% {
-      left: 129px;
-      top: 9px;
+    left: 129px;
+    top: 9px;
   }
   60% {
-      left: 132px;
-      top: -6px;
+    left: 132px;
+    top: -6px;
   }
   65% {
-      left: 126px;
-      top: -27px;
+    left: 126px;
+    top: -27px;
   }
   70% {
-      left: 119px;
-      top: -37px;
+    left: 119px;
+    top: -37px;
   }
   80% {
-      left: 91px;
-      top: -66px;
+    left: 91px;
+    top: -66px;
   }
   90% {
-      left: 54px;
-      top: -91px;
+    left: 54px;
+    top: -91px;
   }
   100% {
-      left: 12px;
-      top: -112px;
+    left: 12px;
+    top: -112px;
   }
 }
