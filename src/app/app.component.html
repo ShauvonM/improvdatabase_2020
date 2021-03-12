@@ -6,6 +6,26 @@
     <img src="assets/favicon/android-chrome-192x192.png" />
   </button>
   <h1>Improv Database</h1>
+
+  <span class="spacer"></span>
+
+  <!-- <div class="search-container"
+       [class.focused]="searchFocused">
+    <div class="search-input">
+      <mat-icon>search</mat-icon>
+      <input (focus)="searchFocused = true"
+             (blur)="searchFocused = false"
+             (keyup)="searchInput($event)"
+             type="text"
+             placeholder="Search the database"
+             [(ngModel)]="searchInputText">
+    </div>
+
+    <div class="menu">
+      <div class="menu-item"
+           mat-menu-item>Search is coming soon!</div>
+    </div>
+  </div> -->
 </mat-toolbar>
 
 <div class="main">
@@ -43,8 +63,7 @@
       </a>
 
       <a mat-list-item
-         routerLink="games/random"
-         routerLinkActive="active">
+         routerLink="games/random">
         <mat-icon>casino</mat-icon>
         <span>Random Game</span>
       </a>
@@ -61,6 +80,13 @@
     <mat-divider></mat-divider>
 
     <mat-nav-list class="bottom">
+      <a mat-list-item
+         routerLink="you"
+         routerLinkActive="active"
+         *ngIf="isLoggedIn">
+        <mat-icon>account_circle</mat-icon>
+        <span>You</span>
+      </a>
 
       <a mat-list-item
          *ngIf="!isLoggedIn"

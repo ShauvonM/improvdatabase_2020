@@ -1,6 +1,6 @@
 mat-form-field {
   display: block;
-  width: 15rem;
+  width: 16rem;
 }
 
 button {
@@ -11,4 +11,8 @@ button {
 
 mat-error {
   margin-bottom: 1rem;
+}
+
+.signup-button {
+  display: inline-block;
 }

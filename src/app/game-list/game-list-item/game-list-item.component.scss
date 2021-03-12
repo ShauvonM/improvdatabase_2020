@@ -1,6 +1,8 @@
 @import "../../../scss/colors";
 
-:host.list-item {
+$avatar-size: 3rem;
+
+:host {
   padding: 1rem 0;
 
   &:first-child {
@@ -8,53 +10,49 @@
   }
 }
 
-.list-item-content {
-  display: flex;
-  // padding: 1rem 0;
-  flex-direction: row;
-
-  h2 {
-    margin: 0;
-  }
-
-  .description {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  mat-chip {
-    cursor: pointer;
-  }
-
-  .column {
-    overflow: hidden;
-  }
-}
-
-.screen-content {
+.content {
   position: relative;
 
-  h2 {
-    font-size: 2rem;
-    margin: 0.5rem 0;
+  &.active {
+    h2 {
+      font-size: 2rem;
+      margin: 0.5rem 0;
+    }
+
+    .description {
+      margin: 1rem 0;
+    }
+
+    .avatar {
+      position: absolute;
+      left: -($avatar-size + 2rem);
+    }
+
+    mat-accordion {
+      margin-top: 1rem;
+    }
   }
 
-  .description {
-    margin: 1rem 0;
-  }
+  &.list-item {
+    display: flex;
+    // padding: 1rem 0;
+    flex-direction: row;
 
-  .avatar {
-    position: absolute;
-    right: 100%;
-  }
+    h2 {
+      margin: 0;
+    }
 
-  mat-accordion {
-    margin-top: 1rem;
+    .description {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .column {
+      overflow: hidden;
+    }
   }
 }
-
-$avatar-size: 3rem;
 
 .avatar {
   margin-right: 1rem;
@@ -77,6 +75,7 @@ $avatar-size: 3rem;
 }
 
 mat-chip {
+  cursor: pointer;
   mat-icon {
     margin-right: 0.5rem;
   }

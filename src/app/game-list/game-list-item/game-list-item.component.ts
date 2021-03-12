@@ -1,59 +1,65 @@
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
+import {Location} from '@angular/common';
 import {Component, Input, OnInit} from '@angular/core';
+import {AngularFireAuth} from '@angular/fire/auth';
 import {MatChipInputEvent} from '@angular/material/chips';
-import {ActivatedRoute} from '@angular/router';
-import {Observable, of} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import firebase from 'firebase/app';
+import {Observable} from 'rxjs';
 import {GamesService} from 'src/app/services/games.service';
-import {ScreenDirective} from 'src/app/shared/screen.directive';
 import {Game, GameMetadata, Name, Note, Tag} from 'src/app/shared/types';
 import {MarkdownService} from '../../services/markdown.service';
+
 
 @Component({
   selector: 'app-game-list-item',
   templateUrl: './game-list-item.component.html',
   styleUrls: ['./game-list-item.component.scss']
 })
-export class GameListItemComponent extends ScreenDirective implements OnInit {
+export class GameListItemComponent implements OnInit {
   @Input() game: Game;
-  listMode = false;
 
-  game$: Observable<Game>;
+  // game$: Observable<Game>;
   names$: Observable<Name[]>;
   notes$: Observable<Note[]>;
+  user$: Observable<firebase.User>;
 
   nameAddOnBlur = true;
+
+  get selected() {
+    return this.game && this.game.slug === this.gameService.selectedGameSlug;
+  }
 
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
   constructor(
       private readonly gameService: GamesService,
       private readonly markdownService: MarkdownService,
-      private readonly route: ActivatedRoute,
+      private readonly location: Location,
+      private readonly auth: AngularFireAuth,
   ) {
-    super();
+    // this.game$ = this.route.params.pipe(switchMap(params => {
+    //   console.log('route', this.location.getState());
+    //   const slug = params.slug;
 
-    this.route.params.subscribe(params => {
-      const slug = params.slug;
+    //   if (slug) {
+    //     return this.gameService.fetchGame(slug).pipe(tap(game => {
+    //       this.names$ = this.gameService.fetchNames(game);
+    //       this.notes$ = this.gameService.fetchNotes(game).pipe(
+    //           tap(notes => console.log(notes)));
 
-      if (slug) {
-        this.game$ = this.gameService.fetchGame(slug).pipe(tap(game => {
-          this.names$ = this.gameService.fetchNames(game);
-          this.notes$ = this.gameService.fetchNotes(game).pipe(
-              tap(notes => console.log(notes)));
-        }));
-      }
-    });
+    //       if (slug === RANDOM) {
+    //         this.location.replaceState(`games/${game.slug}`, '', {});
+    //       }
+    //     }));
+    //   }
+    // }));
+    this.user$ = this.auth.user;
   }
 
   ngOnInit(): void {
-    // If we have an input, this will be in list mode.
-    // Otherwise we're on the details screen, which is set up in the
-    // constructor.
-    if (this.game) {
-      this.className = 'list-item';
-      this.listMode = true;
-      this.game$ = of(this.game);
+    if (this.selected) {
+      this.names$ = this.gameService.fetchNames(this.game);
+      this.notes$ = this.gameService.fetchNotes(this.game);
     }
   }
 
@@ -101,17 +107,17 @@ export class GameListItemComponent extends ScreenDirective implements OnInit {
   }
 
   clickMeta(item: GameMetadata) {
-    if (!this.listMode) {
-      return;
-    }
     this.gameService.addFilter(item);
+    if (this.selected) {
+      this.location.go('games');
+    }
   }
 
   clickTag(item: Tag) {
-    if (!this.listMode) {
-      return;
-    }
     this.gameService.addTagFilter(item);
+    if (this.selected) {
+      this.location.go('games');
+    }
   }
 
   addName(event: MatChipInputEvent): void {
@@ -128,33 +134,4 @@ export class GameListItemComponent extends ScreenDirective implements OnInit {
       input.value = '';
     }
   }
-
-  // getNoteLabel$(note: NoteResponse, game: Game): Observable<string> {
-  //   const path = note.parent.path;
-  //   const user = note.addedUser;
-  //   const collection = path.split('/')[0];
-  //   console.log('note', game);
-  //   let obs: Observable<string>;
-  //   switch (collection) {
-  //     case COLLECTIONS.TAGS:
-  //       obs = this.gameService.getTag(note.parent).pipe(map(tag =>
-  //       tag.name)); break;
-  //     case COLLECTIONS.GAMES:
-  //       // obs = of(game.name);
-  //       obs = of('');
-  //       break;
-  //     case COLLECTIONS.METADATAS:
-  //       obs = this.gameService.getMetadata(note.parent)
-  //                 .pipe(map(meta => meta.name));
-  //       break;
-  //     default:
-  //       obs = of('');
-  //       break;
-  //   }
-  //   return combineLatest([obs, this.gameService.getUser(user)])
-  //       .pipe(map(([text, userData]) => {
-  //         return `re: '${text}' - ${userData.firstName}
-  //         ${userData.lastName}`;
-  //       }));
-  // }
 }

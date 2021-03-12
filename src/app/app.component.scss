@@ -1,5 +1,5 @@
-@import '../scss/colors';
-@import '~@angular/material/theming';
+@import "../scss/colors";
+@import "~@angular/material/theming";
 
 .logo {
   margin-right: 1rem;
@@ -22,6 +22,55 @@ mat-toolbar {
   &.active {
     @include mat-elevation(4);
   }
+
+  .spacer {
+    flex-grow: 1;
+  }
+
+  .search-container {
+    background: rgba(241, 243, 244, 0.24);
+    border-radius: 0.5rem;
+    transition: background 200ms, color 200ms;
+    color: white;
+    position: relative;
+
+    .search-input {
+
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .menu {
+      position: absolute;
+    }
+
+    input {
+      background: none;
+      border: none;
+      outline: none;
+      color: white;
+      margin-left: .5rem;
+      font-size: 1rem;
+      transition: color 200ms;
+
+      &:focus {
+        outline: none;
+      }
+      &::placeholder {
+        color: white;
+      }
+    }
+
+    &.focused {
+      background: white;
+      color: black;
+
+      input {
+        color: black;
+      }
+    }
+  }
 }
 
 mat-sidenav-container {
@@ -33,7 +82,7 @@ mat-sidenav-container {
       min-width: 15rem;
 
       a {
-        padding: 0 .5rem;
+        padding: 0 0.5rem;
 
         &.active {
           background: $color-active;
@@ -97,7 +146,7 @@ $sidenav-item-open-width: 10rem;
 
     &.open {
       a {
-        padding: 0 .5rem;
+        padding: 0 0.5rem;
 
         span {
           width: $sidenav-item-open-width;
@@ -135,7 +184,7 @@ $sidenav-item-open-width: 10rem;
       bottom: 0;
       right: 0;
       z-index: 1;
-      opacity: .5;
+      opacity: 0.5;
     }
   }
 }

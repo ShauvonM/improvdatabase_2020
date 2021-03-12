@@ -11,6 +11,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatMenuModule} from '@angular/material/menu';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {SharedModule} from '../shared/shared.module';
 import {GameListItemComponent} from './game-list-item/game-list-item.component';
@@ -34,6 +35,7 @@ import {GameListScreenComponent} from './game-list-screen.component';
     MatBadgeModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSnackBarModule,
   ]
 })
 export class GameListModule {

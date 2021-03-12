@@ -1,41 +1,48 @@
 import {DocumentReference} from '@angular/fire/firestore';
+import firebase from 'firebase/app';
 
-export interface Time {
+
+export interface Timestamp {
   seconds: number;
-  nanoseconds: number;
+  nanoseconds?: number;
 }
 
 export interface Base {
   id: string;
   legacyID?: number;
-  dateAdded: Time;
-  dateModified: Time;
-  dateDeleted?: Time;
+  dateAdded: Date|Timestamp;
+  dateModified: Date|Timestamp;
+  dateDeleted?: Date|Timestamp;
   description?: string;
   isDeleted: boolean;
   mongoID?: string;
 }
 
 export interface BaseResponse extends Base {
-  addedUser: DocumentReference;
-  modifiedUser: DocumentReference;
-  deletedUser?: DocumentReference;
+  addedUser: string;
+  modifiedUser: string;
+  deletedUser?: string;
 }
 
-export interface User extends Base {
+export interface User {
+  firebaseUser: firebase.User;
+  dateAdded: Date|Timestamp;
+  dateModified: Date|Timestamp;
+  dateDeleted?: Date|Timestamp;
+  description?: string;
+  isDeleted: boolean;
+  uid: string;
   address: string;
-  birthday: Time;
+  birthday: Date|Timestamp;
   city: string;
   company: string;
   country: string;
-  dateLoggedIn: Time;
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   locked: boolean;
   phone: string;
   state: string;
-  superAdmin: boolean;
+  superUser: boolean;
   title: string;
   url: string;
   zip: string;
@@ -55,14 +62,11 @@ export interface TagResponse extends BaseResponse, TagBase {}
 
 export interface Tag extends BaseClass, TagBase {}
 
-export interface NameVoteResponse extends BaseResponse {
-  addedUser: DocumentReference;
-  dateAdded: Time;
-}
+export interface NameVoteResponse extends BaseResponse {}
 
 export interface NameVote extends BaseClass {
   addedUser: User;
-  dateAdded: Time;
+  dateAdded: Timestamp;
 }
 
 export interface NameBase {

@@ -1,8 +1,11 @@
+import {Location} from '@angular/common';
 import {Component} from '@angular/core';
-import {Router} from '@angular/router';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActivatedRoute, NavigationStart, Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {map, tap} from 'rxjs/operators';
+import {filter, map, switchMap, tap} from 'rxjs/operators';
 import {GamesService} from '../services/games.service';
+import {RANDOM} from '../shared/constants';
 import {ScreenDirective} from '../shared/screen.directive';
 import {Game, GameMetadata, Tag} from '../shared/types';
 
@@ -13,15 +16,17 @@ import {Game, GameMetadata, Tag} from '../shared/types';
   styleUrls: ['./game-list-screen.component.scss']
 })
 export class GameListScreenComponent extends ScreenDirective {
-  games$: Observable<Game[]>;
+  // games$: Observable<Game[]>;
 
+  // These are displayed in the filters.
   durations$: Observable<GameMetadata[]>;
   playerCounts$: Observable<GameMetadata[]>;
   tags$: Observable<Tag[]>;
 
+  // A list of observables to display each "page" of results.
   gamePages: Observable<Game[]>[] = [];
 
-  loading = false;
+  isRandom = false;
 
   get filters(): (GameMetadata|Tag)[] {
     return this.gameService.filters;
@@ -31,12 +36,19 @@ export class GameListScreenComponent extends ScreenDirective {
     return this.gameService.theresMore;
   }
 
+  get isPostSelected(): boolean {
+    return !!this.gameService.selectedGameSlug;
+  }
+
   // Querying:
   // https://github.com/angular/angularfire/blob/master/docs/firestore/querying-collections.md
 
   constructor(
       private readonly gameService: GamesService,
+      private readonly route: ActivatedRoute,
       private readonly router: Router,
+      private readonly location: Location,
+      private readonly snackBar: MatSnackBar,
   ) {
     super();
 
@@ -57,10 +69,25 @@ export class GameListScreenComponent extends ScreenDirective {
     }));
 
     this.loadPage();
+
+    this.router.events.pipe(filter(e => e instanceof NavigationStart))
+        .subscribe((e: NavigationStart) => {
+          if (e.url === '/games/random' && this.isRandom) {
+            // If random was clicked once, it won't work again, so we'll handle
+            // it manually.
+            this.gamePages = [];
+            this.loadPage();
+          }
+        });
+
+    this.gameService.filterChange$.subscribe(() => {
+      this.reset();
+    });
   }
 
   reset() {
-    this.gamePages = [this.gamePages[0]];
+    this.gamePages = [];
+    this.loadPage();
   }
 
   loadPage(lastPage?: Game[]) {
@@ -68,16 +95,39 @@ export class GameListScreenComponent extends ScreenDirective {
     if (lastPage) {
       startAfter = lastPage[lastPage.length - 1].name;
     }
-    this.gamePages.push(
-        this.gameService.fetchGamePage(startAfter).pipe(tap(games => {
+    this.gamePages.push(this.route.params.pipe(
+        switchMap(params => {
+          this.isRandom = false;
+          if (params.slug) {
+            if (params.slug === RANDOM) {
+              const filterCount = this.gameService.filters.length;
+              let msg = '';
+              if (filterCount) {
+                msg = `Finding a random game from ${filterCount} filter(s).`;
+              } else {
+                msg = 'Finding a random game.'
+              }
+              this.snackBar.open(msg, '', {duration: 3000});
+            }
+            return this.gameService.selectGameBySlug(params.slug)
+                .pipe(map(game => {
+                  if (params.slug === RANDOM) {
+                    this.isRandom = true;
+
+                    this.location.replaceState(
+                        `games/${this.gameService.selectedGameSlug}`);
+                  }
+                  return [game];
+                }));
+          } else {
+            return this.gameService.fetchGamePage(startAfter);
+          }
+        }),
+        tap(games => {
           console.log(
               'page', games, games[0].name, games[games.length - 1].name);
           return games;
         })));
-    this.gameService.filterChange$.subscribe(() => {
-      console.log('filter change!');
-      this.reset();
-    });
   }
 
   addFilter(selection: GameMetadata) {
@@ -97,7 +147,6 @@ export class GameListScreenComponent extends ScreenDirective {
   }
 
   selectGame(event: MouseEvent, game: Game) {
-    // this.location.go(`${POST_PREFIX}/${post.slug}`);
     this.router.navigate(['games', game.slug]);
   }
 

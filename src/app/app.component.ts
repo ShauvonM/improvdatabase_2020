@@ -1,10 +1,11 @@
 import {Component} from '@angular/core';
-import {AngularFireAuth} from '@angular/fire/auth';
 import {MatDialog} from '@angular/material/dialog';
-import firebase from 'firebase/app';
+import {Router} from '@angular/router';
 import {fromEvent} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {LoginDialogComponent} from './login-dialog/login-dialog.component';
+import {UserService} from './services/user.service';
+import {User} from './shared/types';
 
 
 const TOOBLAR_ACTIVE_POSITION = 16 * 4;
@@ -51,11 +52,16 @@ export class AppComponent {
   loginString = '';
   logoutString = '';
 
-  private user?: firebase.User;
+  searchInputText = '';
+  searchFocused = false;
+
+  private user?: User;
 
   constructor(
       private readonly matDialog: MatDialog,
-      private readonly auth: AngularFireAuth) {
+      private readonly userService: UserService,
+      private readonly router: Router,
+  ) {
     fromEvent(window, 'scroll')
         .pipe(map(() => {
           return window.scrollY;
@@ -70,7 +76,8 @@ export class AppComponent {
     this.logoutString = 'Log ' +
         LOGOUT_STRINGS[Math.floor(Math.random() * LOGOUT_STRINGS.length)];
 
-    this.auth.user.subscribe(user => {
+    this.userService.user$.subscribe(user => {
+      console.log('user', user);
       this.user = user;
     });
   }
@@ -88,6 +95,10 @@ export class AppComponent {
   }
 
   logout() {
-    this.auth.signOut();
+    this.userService.logout();
+  }
+
+  searchInput(e: KeyboardEvent) {
+    console.log('search', this.searchInputText);
   }
 }

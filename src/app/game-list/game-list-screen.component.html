@@ -3,7 +3,7 @@
 <div class="screen-content">
 
   <div class="tools"
-       *ngIf="durations$ | async">
+       *ngIf="!isPostSelected && durations$ | async">
     <mat-chip-list aria-label="Selected filters">
       <mat-chip *ngFor="let filter of filters"
                 (click)="removeFilter(filter)">
@@ -76,7 +76,7 @@
     </mat-menu>
   </div>
 
-  <mat-card>
+  <div>
     <div class="game-list">
       <ng-container *ngFor="let games$ of gamePages; index as page">
         <ng-container *ngIf="games$ | async as games; else loading">
@@ -95,13 +95,13 @@
                (appear)="loadPage(games)"
                class="theres-more">There's more . . .</div>
 
-          <div *ngIf="page == gamePages.length - 1 && !theresMore"
+          <div *ngIf="page == gamePages.length - 1 && !theresMore && !isPostSelected"
                class="theres-more">end of line</div>
 
         </ng-container>
       </ng-container>
     </div>
-  </mat-card>
+  </div>
 
 </div>
 

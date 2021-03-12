@@ -1,129 +1,126 @@
-<div class="screen-margin"
-     *ngIf="!listMode"></div>
+<div class="content"
+     [class.active]="selected"
+     [class.list-item]="!selected">
+  <div class="avatar"
+       [matTooltip]="getIconDescription(game.tags)">
+    <mat-icon>{{getIcon(game.tags)}}</mat-icon>
+  </div>
 
-<div [class.screen-content]="!listMode"
-     [class.list-item-content]="listMode">
-  <ng-container *ngIf="game$ | async as game">
-    <div class="avatar"
-         [matTooltip]="getIconDescription(game.tags)">
-      <mat-icon>{{getIcon(game.tags)}}</mat-icon>
+  <div class="column">
+    <h2>{{game.name}}</h2>
+
+    <div class="description"
+         [innerHTML]="!selected ? stripTags(game.description) : renderMarkdown(game.description)">
     </div>
+    <mat-chip-list aria-label="Tags applied to this game">
 
-    <div class="column">
-      <h2>{{game.name}}</h2>
+      <mat-chip *ngIf="game.duration"
+                color="accent"
+                selected="true"
+                (click)="clickMeta(game.duration)"
+                [matTooltip]="game.duration.description">
+        <mat-icon>timer</mat-icon>
+        <span>{{game.duration.name}}</span>
+      </mat-chip>
 
-      <div class="description"
-           [innerHTML]="listMode ? stripTags(game.description) : renderMarkdown(game.description)">
-      </div>
-      <mat-chip-list aria-label="Tags applied to this game">
+      <mat-chip *ngIf="!game.duration"
+                color="warn"
+                selected="true"
+                matTooltip="Nobody has specified a duration for this game. Maybe you can?">
+        <mat-icon>timer</mat-icon>
+        <span>Unknown!</span>
+      </mat-chip>
 
-        <mat-chip *ngIf="game.duration"
-                  color="accent"
-                  selected="true"
-                  (click)="clickMeta(game.duration)"
-                  [matTooltip]="game.duration.description">
-          <mat-icon>timer</mat-icon>
-          <span>{{game.duration.name}}</span>
-        </mat-chip>
+      <mat-chip *ngIf="game.playerCount"
+                color="accent"
+                selected="true"
+                (click)="clickMeta(game.playerCount)"
+                [matTooltip]="game.playerCount.description">
+        <mat-icon>group</mat-icon>
+        <span>{{game.playerCount.name}}</span>
+      </mat-chip>
 
-        <mat-chip *ngIf="!game.duration"
-                  color="warn"
-                  selected="true"
-                  matTooltip="Nobody has specified a duration for this game. Maybe you can?">
-          <mat-icon>timer</mat-icon>
-          <span>Unknown!</span>
-        </mat-chip>
+      <mat-chip *ngIf="!game.playerCount"
+                color="warn"
+                selected="true"
+                matTooltip="Nobody has specified a player count for this game. Maybe Zoidberg?">
+        <mat-icon>group</mat-icon>
+        <span>Unknown!</span>
+      </mat-chip>
 
-        <mat-chip *ngIf="game.playerCount"
-                  color="accent"
-                  selected="true"
-                  (click)="clickMeta(game.playerCount)"
-                  [matTooltip]="game.playerCount.description">
-          <mat-icon>group</mat-icon>
-          <span>{{game.playerCount.name}}</span>
-        </mat-chip>
+      <mat-chip *ngFor="let tag of game.tags"
+                (click)="clickTag(tag)"
+                [matTooltip]="tag.description">{{tag.name}}</mat-chip>
 
-        <mat-chip *ngIf="!game.playerCount"
-                  color="warn"
-                  selected="true"
-                  matTooltip="Nobody has specified a player count for this game. Maybe Zoidberg?">
-          <mat-icon>group</mat-icon>
-          <span>Unknown!</span>
-        </mat-chip>
+    </mat-chip-list>
 
-        <mat-chip *ngFor="let tag of game.tags"
-                  (click)="clickTag(tag)"
-                  [matTooltip]="tag.description">{{tag.name}}</mat-chip>
+    <ng-container *ngIf="selected">
+      <mat-accordion multi="true">
 
-      </mat-chip-list>
+        <mat-expansion-panel *ngIf="names$ | async as names"
+                             (opened)="namesOpenState = true"
+                             (closed)="namesOpenState = false">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Also known as . . .
+            </mat-panel-title>
+          </mat-expansion-panel-header>
 
-      <ng-container *ngIf="!listMode">
-        <mat-accordion multi="true">
+          <p>
+            Here's a list of other names for this game.
+            <span *ngIf="user$ | async as user"> Select the one you prefer.</span>
+          </p>
 
-          <mat-expansion-panel *ngIf="names$ | async as names"
-                               (opened)="namesOpenState = true"
-                               (closed)="namesOpenState = false">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                Alternate names
-              </mat-panel-title>
-            </mat-expansion-panel-header>
+          <mat-chip-list #akaList
+                         class="aka-name-list"
+                         aria-label="Alternate names for this game">
+            <ng-container *ngFor="let name of names">
+              <mat-chip [matBadge]="name.weight">{{name.name}}</mat-chip>
+            </ng-container>
 
-            <mat-chip-list #akaList
-                           class="aka-name-list"
-                           aria-label="Alternate names for this game">
-              <ng-container *ngFor="let name of names">
-                <mat-chip [matBadge]="name.weight">{{name.name}}</mat-chip>
-              </ng-container>
+            <mat-form-field *ngIf="user$ | async as user">
+              <input placeholder="Or propose new name..."
+                     type="text"
+                     matInput />
+            </mat-form-field>
+          </mat-chip-list>
+        </mat-expansion-panel>
 
-              <mat-form-field>
-                <input placeholder="Propose new name..."
-                       type="text"
-                       matInput />
-              </mat-form-field>
-            </mat-chip-list>
-          </mat-expansion-panel>
+        <mat-expansion-panel *ngIf="notes$ | async as notes"
+                             expanded="true"
+                             (opened)="notesOpenState = true"
+                             (closed)="notesOpenState = false">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Notes
+            </mat-panel-title>
+          </mat-expansion-panel-header>
 
-          <mat-expansion-panel *ngIf="notes$ | async as notes"
-                               expanded="true"
-                               (opened)="notesOpenState = true"
-                               (closed)="notesOpenState = false">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                Notes
-              </mat-panel-title>
-            </mat-expansion-panel-header>
+          <div class="note-list">
+            <div class="note"
+                 *ngFor="let note of notes">
+              <div class="label">
+                <span>re:</span>
+                <mat-chip
+                          *ngIf="note.parentCollection === 'tags' || note.parentCollection === 'gamemetadatas'">
+                  {{note.parent.name}}
+                </mat-chip>
 
-            <div class="note-list">
-              <div class="note"
-                   *ngFor="let note of notes">
-                <div class="label">
-                  <span>re:</span>
-                  <mat-chip
-                            *ngIf="note.parentCollection === 'tags' || note.parentCollection === 'gamemetadatas'">
-                    {{note.parent.name}}
-                  </mat-chip>
-
-                  <ng-container *ngIf="note.parentCollection === 'games'">
-                    <mat-icon>{{getIcon(game.tags)}}</mat-icon> <span>{{note.parent.name}}</span>
-                  </ng-container>
-                </div>
-
-                <div class="description"
-                     [innerHTML]="renderMarkdown(note.description)"></div>
-
-                <div class="username"> - {{note.addedUser.firstName}}
-                  {{note.addedUser.lastName}}</div>
+                <ng-container *ngIf="note.parentCollection === 'games'">
+                  <mat-icon>{{getIcon(game.tags)}}</mat-icon> <span>{{note.parent.name}}</span>
+                </ng-container>
               </div>
+
+              <div class="description"
+                   [innerHTML]="renderMarkdown(note.description)"></div>
+
+              <div class="username"
+                   *ngIf="note.addedUser"> - {{note.addedUser.name}}</div>
             </div>
-          </mat-expansion-panel>
+          </div>
+        </mat-expansion-panel>
 
-        </mat-accordion>
-      </ng-container>
-    </div>
-  </ng-container>
-</div>
-
-<div class="screen-margin"
-     *ngIf="!listMode">
+      </mat-accordion>
+    </ng-container>
+  </div>
 </div>

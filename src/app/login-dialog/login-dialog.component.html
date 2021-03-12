@@ -1,31 +1,64 @@
 <h1 mat-dialog-title>{{title}}</h1>
 <div mat-dialog-content>
 
-  <p>This is how you log in. <a routerLink="signup">Sign up today!</a></p>
+  <ng-container *ngIf="!signupMode">
 
-  <mat-form-field appearance="outline">
-    <mat-label>Email</mat-label>
-    <input type="text"
-           matInput
-           [(ngModel)]="email" />
-  </mat-form-field>
+    <p>
+      This is how you log in.
+      <button class="signup-button"
+              mat-button
+              (click)="signup($event)">Sign up today!</button>
+    </p>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Password</mat-label>
-    <input type="password"
-           matInput
-           [(ngModel)]="password" />
-  </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input type="text"
+             matInput
+             [(ngModel)]="email" />
+    </mat-form-field>
 
-  <mat-error *ngIf="error" [@error]>{{error}}</mat-error>
+    <mat-form-field appearance="outline">
+      <mat-label>Password</mat-label>
+      <input type="password"
+             matInput
+             [(ngModel)]="password" />
+    </mat-form-field>
 
-  <p>or...</p>
+    <mat-error *ngIf="error"
+               [@error]>{{error}}</mat-error>
 
-  <button mat-button
-          (click)="doGoogle($event)">
-    <mat-icon>login</mat-icon>
-    <span>Log in with Google</span>
-  </button>
+    <p>or...</p>
+
+    <button mat-button
+            (click)="doGoogle($event)">
+      <mat-icon>login</mat-icon>
+      <span>Log in with Google</span>
+    </button>
+
+  </ng-container>
+
+  <ng-container *ngIf="signupMode">
+
+    <p>You have made an excellent choice.</p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input type="text"
+             matInput
+             [(ngModel)]="email" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Password</mat-label>
+      <input type="password"
+             matInput
+             [(ngModel)]="password" />
+    </mat-form-field>
+
+    <mat-error *ngIf="error"
+               [@error]>{{error}}</mat-error>
+
+  </ng-container>
 
 </div>
 <div mat-dialog-actions>
