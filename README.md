@@ -26,34 +26,6 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
 
-# TODO
-
-* ~~The random game screen should update the route to the selected game's slug~~
-* ~~The random game screen should use the selected filters on the game list~~
-* __User authentication and authorization__
-  * https://firebase.google.com/docs/rules/basics#production-ready_rules
-  * https://firebase.google.com/docs/firestore/solutions/role-based-access
-  * ~~Write firebase rules~~
-  * ~~User fields should just be the UID?~~
-* Name voting
-* Adding new games
-* Editing and deleting games
-* Adding, editing, and deleting notes
-* Note voting
-* Comments on notes
-* A team screen
-* The welcome screen
-* The news screen
-* The about screen
-* Revamp the game pagination to not have separate observables
-* Favorite games
-* Expand user roles: https://firebase.google.com/docs/auth/admin/custom-claims
-* Searching for a game
-* Clicking a tag on the game screen should navigate to the list filtered by that tag
-* A user detail screen
-* Unit tests for firebase rules
-* Multiple slugs for games (how do name changes effect slugs?)
-
 
 
 
