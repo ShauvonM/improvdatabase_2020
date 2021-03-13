@@ -1,6 +1,8 @@
 @import "../../../scss/colors";
+@import "../../../scss/vars";
 
 $avatar-size: 3rem;
+$avatar-size-mobile: 2rem;
 
 :host {
   padding: 1rem 0;
@@ -31,6 +33,16 @@ $avatar-size: 3rem;
     mat-accordion {
       margin-top: 1rem;
     }
+
+    @media #{$media-mobile} {
+      .avatar {
+        left: 0;
+        top: 0.5rem;
+      }
+      h2 {
+        margin-left: $avatar-size-mobile + 1rem;
+      }
+    }
   }
 
   &.list-item {
@@ -52,6 +64,15 @@ $avatar-size: 3rem;
     .column {
       overflow: hidden;
     }
+
+    @media #{$media-mobile} {
+      .description {
+        display: none;
+      }
+      .tag-chip {
+        display: none;
+      }
+    }
   }
 }
 
@@ -69,6 +90,13 @@ $avatar-size: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media #{$media-mobile} {
+    width: $avatar-size-mobile;
+    min-width: $avatar-size-mobile;
+    height: $avatar-size-mobile;
+    line-height: $avatar-size-mobile;
+  }
 }
 
 .column {

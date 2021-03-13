@@ -1,4 +1,5 @@
 @import "../scss/colors";
+@import "../scss/vars";
 @import "~@angular/material/theming";
 
 .logo {
@@ -9,6 +10,7 @@
 }
 
 $toolbar-height: 4rem;
+$toolbar-height-mobile: 3.5rem;
 
 mat-toolbar {
   position: fixed;
@@ -35,7 +37,6 @@ mat-toolbar {
     position: relative;
 
     .search-input {
-
       padding: 0.5rem 1rem;
       display: flex;
       align-items: center;
@@ -50,7 +51,7 @@ mat-toolbar {
       border: none;
       outline: none;
       color: white;
-      margin-left: .5rem;
+      margin-left: 0.5rem;
       font-size: 1rem;
       transition: color 200ms;
 
@@ -94,6 +95,10 @@ mat-sidenav-container {
       }
     }
   }
+
+  @media #{$media-mobile} {
+    min-height: calc(100% - $toolbar-height-mobile);
+  }
 }
 
 $sidenav-transition-duration: 300ms;
@@ -117,6 +122,8 @@ $sidenav-item-open-width: 10rem;
     left: 0;
     background: white;
     z-index: 18;
+    @include mat-elevation(0);
+    @include mat-elevation-transition;
 
     .top {
       flex-grow: 1;
@@ -145,6 +152,7 @@ $sidenav-item-open-width: 10rem;
     }
 
     &.open {
+      @include mat-elevation(8);
       a {
         padding: 0 0.5rem;
 
@@ -157,6 +165,20 @@ $sidenav-item-open-width: 10rem;
         }
       }
     }
+
+    @media #{$media-mobile} {
+      a {
+        width: 0;
+        overflow: hidden;
+        transition: width $sidenav-transition-duration, padding $sidenav-transition-duration;
+      }
+
+      &.open {
+        a {
+          width: $sidenav-item-open-width + 4rem;
+        }
+      }
+    }
   }
 
   .sidenav-block {
@@ -165,6 +187,10 @@ $sidenav-item-open-width: 10rem;
 
     &.open {
       width: 4.5rem + $sidenav-item-open-width;
+    }
+
+    @media #{$media-mobile} {
+      display: none;
     }
   }
 
@@ -185,6 +211,14 @@ $sidenav-item-open-width: 10rem;
       right: 0;
       z-index: 1;
       opacity: 0.5;
+    }
+  }
+
+  @media #{$media-mobile} {
+    padding-top: $toolbar-height-mobile;
+
+    .sidenav {
+      top: $toolbar-height-mobile;
     }
   }
 }

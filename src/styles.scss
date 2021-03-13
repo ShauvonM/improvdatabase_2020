@@ -4,6 +4,7 @@
 // Plus imports for other components in your app.
 
 @import "scss/colors";
+@import "scss/vars";
 
 $font-family: Lato, "Helvetica Neue", sans-serif;
 
@@ -52,6 +53,19 @@ body {
     width: 100%;
     max-width: 52.5rem;
     box-sizing: border-box;
+  }
+
+  @media #{$media-mobile} {
+    padding: 0;
+    display: block;
+
+    .screen-margin {
+      display: none;
+    }
+
+    .screen-content {
+      max-width: 100%;
+    }
   }
 }
 
