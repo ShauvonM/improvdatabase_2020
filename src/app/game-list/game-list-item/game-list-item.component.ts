@@ -1,13 +1,15 @@
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {Location} from '@angular/common';
 import {Component, Input, OnInit} from '@angular/core';
-import {AngularFireAuth} from '@angular/fire/auth';
-import {MatChipInputEvent} from '@angular/material/chips';
-import firebase from 'firebase/app';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {Observable} from 'rxjs';
+import {take} from 'rxjs/operators';
 import {GamesService} from 'src/app/services/games.service';
-import {Game, GameMetadata, Name, Note, Tag} from 'src/app/shared/types';
+import {UserService} from 'src/app/services/user.service';
+import {SNACKBAR_DURATION_DEFAULT} from 'src/app/shared/constants';
+import {Game, GameMetadata, Name, NameVoteResponse, Note, Tag, User} from 'src/app/shared/types';
 import {MarkdownService} from '../../services/markdown.service';
+import {NamesService, NameVoteEffect} from '../../services/names.service';
 
 
 @Component({
@@ -20,10 +22,13 @@ export class GameListItemComponent implements OnInit {
 
   // game$: Observable<Game>;
   names$: Observable<Name[]>;
+  nameVote$: Observable<NameVoteResponse[]>;
   notes$: Observable<Note[]>;
-  user$: Observable<firebase.User>;
+  // user$: Observable<firebase.User>;
 
-  nameAddOnBlur = true;
+  user?: User;
+
+  newNameText = '';
 
   get selected() {
     return this.game && this.game.slug === this.gameService.selectedGameSlug;
@@ -33,33 +38,19 @@ export class GameListItemComponent implements OnInit {
 
   constructor(
       private readonly gameService: GamesService,
+      private readonly nameService: NamesService,
       private readonly markdownService: MarkdownService,
       private readonly location: Location,
-      private readonly auth: AngularFireAuth,
-  ) {
-    // this.game$ = this.route.params.pipe(switchMap(params => {
-    //   console.log('route', this.location.getState());
-    //   const slug = params.slug;
-
-    //   if (slug) {
-    //     return this.gameService.fetchGame(slug).pipe(tap(game => {
-    //       this.names$ = this.gameService.fetchNames(game);
-    //       this.notes$ = this.gameService.fetchNotes(game).pipe(
-    //           tap(notes => console.log(notes)));
-
-    //       if (slug === RANDOM) {
-    //         this.location.replaceState(`games/${game.slug}`, '', {});
-    //       }
-    //     }));
-    //   }
-    // }));
-    this.user$ = this.auth.user;
-  }
+      private readonly userService: UserService,
+      private readonly snackBar: MatSnackBar,
+  ) {}
 
   ngOnInit(): void {
     if (this.selected) {
-      this.names$ = this.gameService.fetchNames(this.game);
+      this.names$ = this.nameService.fetchNames(this.game);
+      this.nameVote$ = this.nameService.fetchMyNameVotes(this.game);
       this.notes$ = this.gameService.fetchNotes(this.game);
+      this.userService.user$.pipe(take(1)).subscribe(user => this.user = user);
     }
   }
 
@@ -120,18 +111,60 @@ export class GameListItemComponent implements OnInit {
     }
   }
 
-  addName(event: MatChipInputEvent): void {
-    const input = event.input;
-    const value = event.value;
-
+  addName(event: KeyboardEvent): void {
     // Add a name
-    if ((value || '').trim()) {
-      console.log('add a name!', value);
+    if ((this.newNameText || '').trim()) {
+      const name = this.newNameText;
+      console.log('add a name!', name);
+      this.nameService.addNewName(this.game, name).subscribe(ref => {
+        this.snackBar.open(
+            'We have added that name to the database. Hey, thanks. Don\'t forget to vote for it if it\'s your preferred name.',
+            '', {duration: SNACKBAR_DURATION_DEFAULT});
+      });
     }
+    this.newNameText = '';
+  }
 
-    // Reset the input value
-    if (input) {
-      input.value = '';
-    }
+  removeName(name: Name) {
+    this.nameService.removeName(this.game, name).subscribe(effect => {
+      let msg = '';
+      if (effect === NameVoteEffect.NAME_VOTE_REMOVED) {
+        msg = 'That name is gone, now. It\'s like it never happened.';
+      } else {
+        msg =
+            'Way to delete the name for this game. Now it\'s called something else.';
+      }
+
+      this.snackBar.open(msg, '', {duration: SNACKBAR_DURATION_DEFAULT});
+    });
+  }
+
+  hasVotedForName(votes: NameVoteResponse[], name: Name): boolean {
+    return !!votes.find(vote => vote.nameId === name.id);
+  }
+
+  nameVote(existingVotes: NameVoteResponse[], name: Name) {
+    this.nameService.voteForName(this.game, name, existingVotes).subscribe(effect => {
+      let msg = '';
+      switch (effect) {
+        case NameVoteEffect.NAME_VOTE_CHANGED:
+          msg = 'Your vote was updated. Thank you for being open to change.';
+          break;
+        case NameVoteEffect.NAME_VOTE_MADE:
+          msg = 'Your vote has been counted. Hooray democracy!';
+          break;
+        case NameVoteEffect.NAME_VOTE_REMOVED:
+          msg = 'Your vote was removed. Please return your "I Voted" sticker.';
+          break;
+        case NameVoteEffect.NAME_VOTE_RENAME:
+          msg =
+              'Wow, you have changed the official name of this game. Democracy works!';
+          break;
+        default:
+          msg =
+              'Something weird happened to your vote. I . . . really don\'t know what to do.';
+      }
+      this.snackBar.open(msg, '', {duration: SNACKBAR_DURATION_DEFAULT});
+    });
   }
 }

@@ -52,6 +52,7 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 * Clicking a tag on the game screen should navigate to the list filtered by that tag
 * A user detail screen
 * Unit tests for firebase rules
+* Multiple slugs for games (how do name changes effect slugs?)
 
 
 

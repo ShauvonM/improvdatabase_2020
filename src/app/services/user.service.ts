@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {AngularFireAuth} from '@angular/fire/auth';
 import {AngularFirestore} from '@angular/fire/firestore';
 import {Observable, of} from 'rxjs';
-import {map, switchMap} from 'rxjs/operators';
+import {map, switchMap, take} from 'rxjs/operators';
 import {COLLECTIONS} from '../shared/constants';
 import {User} from '../shared/types';
 
@@ -74,18 +74,21 @@ export class UserService {
     }
     if (!this.usermap.has(uid)) {
       // Only logged in users can see users.
-      this.usermap.set(uid, this.auth.user.pipe(switchMap(user => {
-        if (user) {
-          return this.firestore.collection<User>(COLLECTIONS.USERS)
-              .doc(uid)
-              .get()
-              .pipe(map(user => {
-                return {...user.data() as User, id: user.id};
-              }));
-        } else {
-          return of(null);
-        }
-      })));
+      this.usermap.set(
+          uid,
+          this.auth.user.pipe(
+              take(1), switchMap(user => {
+                if (user) {
+                  return this.firestore.collection<User>(COLLECTIONS.USERS)
+                      .doc(uid)
+                      .get()
+                      .pipe(map(user => {
+                        return {...user.data() as User, id: user.id};
+                      }));
+                } else {
+                  return of(null);
+                }
+              })));
     }
     return this.usermap.get(uid);
   }

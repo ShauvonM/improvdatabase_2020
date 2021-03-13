@@ -1,5 +1,6 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
 import {MatBadgeModule} from '@angular/material/badge';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -36,6 +37,7 @@ import {GameListScreenComponent} from './game-list-screen.component';
     MatFormFieldModule,
     MatInputModule,
     MatSnackBarModule,
+    FormsModule,
   ]
 })
 export class GameListModule {

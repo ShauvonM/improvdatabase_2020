@@ -1,11 +1,10 @@
 import {Injectable} from '@angular/core';
-import {AngularFireAuth} from '@angular/fire/auth';
 import {AngularFirestore, CollectionReference, DocumentChangeAction, DocumentData, DocumentReference} from '@angular/fire/firestore';
 import firebase from 'firebase/app';
 import {BehaviorSubject, combineLatest, Observable, of, Subject} from 'rxjs';
 import {debounceTime, map, switchMap, tap} from 'rxjs/operators';
 import {COLLECTIONS, RANDOM} from '../shared/constants';
-import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, Name, NameResponse, Note, NoteResponse, ParentType, Tag, TagResponse, User} from '../shared/types';
+import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, Note, NoteResponse, ParentType, Tag, TagResponse, User} from '../shared/types';
 import {UserService} from './user.service';
 
 const LS_FILTERS = 'gameListFilters'
@@ -33,7 +32,6 @@ export class GamesService {
 
   constructor(
       private readonly firestore: AngularFirestore,
-      private readonly auth: AngularFireAuth,
       private readonly userService: UserService,
   ) {
     const storageFilters = JSON.parse(localStorage.getItem(LS_FILTERS));
@@ -212,16 +210,6 @@ export class GamesService {
               this.selectedGameSlug_ = games[0].slug;
               return games[0];
             }));
-  }
-
-  fetchNames(game: Game): Observable<Name[]> {
-    return this.firestore
-        .collection<NameResponse>(
-            `${COLLECTIONS.GAMES}/${game.id}/${COLLECTIONS.NAMES}`)
-        .valueChanges({idField: 'id'})
-        .pipe(switchMap(
-            nameResponses =>
-                this.switchResponseToClass<NameResponse, Name>(nameResponses)));
   }
 
   fetchNotes(game: Game): Observable<Note[]> {

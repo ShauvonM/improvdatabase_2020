@@ -147,6 +147,9 @@ export class GameListScreenComponent extends ScreenDirective {
   }
 
   selectGame(event: MouseEvent, game: Game) {
+    if (this.isPostSelected) {
+      return;
+    }
     this.router.navigate(['games', game.slug]);
   }
 

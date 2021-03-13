@@ -7,23 +7,6 @@ export interface Timestamp {
   nanoseconds?: number;
 }
 
-export interface Base {
-  id: string;
-  legacyID?: number;
-  dateAdded: Date|Timestamp;
-  dateModified: Date|Timestamp;
-  dateDeleted?: Date|Timestamp;
-  description?: string;
-  isDeleted: boolean;
-  mongoID?: string;
-}
-
-export interface BaseResponse extends Base {
-  addedUser: string;
-  modifiedUser: string;
-  deletedUser?: string;
-}
-
 export interface User {
   firebaseUser: firebase.User;
   dateAdded: Date|Timestamp;
@@ -48,6 +31,23 @@ export interface User {
   zip: string;
 }
 
+export interface Base {
+  id?: string;
+  legacyID?: number;
+  dateAdded: Date|Timestamp;
+  dateModified: Date|Timestamp;
+  dateDeleted?: Date|Timestamp;
+  description?: string;
+  isDeleted: boolean;
+  mongoID?: string;
+}
+
+export interface BaseResponse extends Base {
+  addedUser: string;
+  modifiedUser: string;
+  deletedUser?: string;
+}
+
 export interface BaseClass extends Base {
   addedUser: User;
   modifiedUser: User;
@@ -62,16 +62,17 @@ export interface TagResponse extends BaseResponse, TagBase {}
 
 export interface Tag extends BaseClass, TagBase {}
 
-export interface NameVoteResponse extends BaseResponse {}
-
-export interface NameVote extends BaseClass {
-  addedUser: User;
-  dateAdded: Timestamp;
+interface NameVoteBase {
+  nameId: string;
 }
+
+export interface NameVoteResponse extends NameVoteBase, BaseResponse {}
+
+export interface NameVote extends NameVoteBase, BaseClass {}
 
 export interface NameBase {
   name: string;
-  weight: number;
+  weight: number|firebase.firestore.FieldValue;
 }
 
 export interface NameResponse extends NameBase, BaseResponse {}

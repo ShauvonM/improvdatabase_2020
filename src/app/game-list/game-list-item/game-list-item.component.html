@@ -66,24 +66,54 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
 
-          <p>
-            Here's a list of other names for this game.
-            <span *ngIf="user$ | async as user"> Select the one you prefer.</span>
-          </p>
+          <ng-container *ngIf="nameVote$ | async as votes">
 
-          <mat-chip-list #akaList
-                         class="aka-name-list"
-                         aria-label="Alternate names for this game">
-            <ng-container *ngFor="let name of names">
-              <mat-chip [matBadge]="name.weight">{{name.name}}</mat-chip>
-            </ng-container>
+            <p>
+              Here's a list of other names for this game.
+              <span *ngIf="user"> Select the one you prefer.</span>
+            </p>
 
-            <mat-form-field *ngIf="user$ | async as user">
-              <input placeholder="Or propose new name..."
-                     type="text"
-                     matInput />
-            </mat-form-field>
-          </mat-chip-list>
+            <mat-chip-list #akaList
+                           class="aka-name-list"
+                           aria-label="Alternate names for this game">
+              <ng-container *ngFor="let name of names">
+
+                <mat-chip *ngIf="!hasVotedForName(votes, name)"
+                          [matBadge]="name.weight"
+                          [removable]="name.addedUser.uid === user.uid"
+                          (removed)="removeName($event, name)"
+                          (click)="nameVote(votes, name)">
+                  {{name.name}}
+                  <mat-icon matChipRemove
+                            *ngIf="name.addedUser.uid === user.uid">cancel</mat-icon>
+                </mat-chip>
+
+                <mat-chip *ngIf="hasVotedForName(votes, name)"
+                          [matBadge]="name.weight"
+                          [removable]="name.addedUser.uid === user.uid"
+                          color="accent"
+                          selected="true"
+                          matTooltip="You voted for this one"
+                          (removed)="removeName(name)"
+                          (click)="nameVote(votes, name)">
+                  {{name.name}}
+                  <mat-icon matChipRemove
+                            *ngIf="name.addedUser.uid === user.uid">cancel</mat-icon>
+                </mat-chip>
+
+              </ng-container>
+
+              <mat-form-field *ngIf="user">
+                <input placeholder="Or propose new name..."
+                       type="text"
+                       name="newName"
+                       matInput
+                       [(ngModel)]="newNameText"
+                       (keydown.enter)="addName($event)" />
+              </mat-form-field>
+            </mat-chip-list>
+
+          </ng-container>
         </mat-expansion-panel>
 
         <mat-expansion-panel *ngIf="notes$ | async as notes"
