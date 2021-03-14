@@ -1,9 +1,8 @@
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {Location} from '@angular/common';
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {Observable} from 'rxjs';
-import {take} from 'rxjs/operators';
+import {Observable, Subscription} from 'rxjs';
 import {GamesService} from 'src/app/services/games.service';
 import {UserService} from 'src/app/services/user.service';
 import {SNACKBAR_DURATION_DEFAULT} from 'src/app/shared/constants';
@@ -17,8 +16,16 @@ import {NamesService, NameVoteEffect} from '../../services/names.service';
   templateUrl: './game-list-item.component.html',
   styleUrls: ['./game-list-item.component.scss']
 })
-export class GameListItemComponent implements OnInit {
-  @Input() game: Game;
+export class GameListItemComponent implements OnInit, OnDestroy {
+  game_: Game;
+  @Input()
+  get game(): Game {
+    return this.game_;
+  }
+  set game(g: Game) {
+    this.game_ = g;
+    this.isEditDescriptionSaving = false;
+  }
 
   // game$: Observable<Game>;
   names$: Observable<Name[]>;
@@ -27,11 +34,21 @@ export class GameListItemComponent implements OnInit {
   // user$: Observable<firebase.User>;
 
   user?: User;
+  userSubscription: Subscription;
 
   newNameText = '';
 
+  isEditDescriptionActive = false;
+  isEditDescriptionSaving = false;
+  editDescriptionText = '';
+
   get selected() {
     return this.game && this.game.slug === this.gameService.selectedGameSlug;
+  }
+
+  get canEdit() {
+    return this.selected && this.user &&
+        (this.user.superUser || this.game.addedUser.uid === this.user.uid);
   }
 
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
@@ -50,7 +67,14 @@ export class GameListItemComponent implements OnInit {
       this.names$ = this.nameService.fetchNames(this.game);
       this.nameVote$ = this.nameService.fetchMyNameVotes(this.game);
       this.notes$ = this.gameService.fetchNotes(this.game);
-      this.userService.user$.pipe(take(1)).subscribe(user => this.user = user);
+      this.userSubscription =
+          this.userService.user$.subscribe(user => this.user = user);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
     }
   }
 
@@ -166,5 +190,26 @@ export class GameListItemComponent implements OnInit {
       }
       this.snackBar.open(msg, '', {duration: SNACKBAR_DURATION_DEFAULT});
     });
+  }
+
+  editDescription(e: MouseEvent) {
+    e.stopPropagation();
+    if (!this.canEdit) {
+      return;
+    }
+
+    this.isEditDescriptionActive = true;
+    this.editDescriptionText = this.game.description;
+  }
+
+  saveDescription() {
+    this.isEditDescriptionActive = false;
+    this.isEditDescriptionSaving = true;
+
+    this.gameService.saveDescription(this.game, this.editDescriptionText)
+        .subscribe(
+            () => {
+                // ...
+            });
   }
 }

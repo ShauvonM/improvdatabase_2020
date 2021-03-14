@@ -9,9 +9,39 @@
   <div class="column">
     <h2>{{game.name}}</h2>
 
-    <div class="description"
-         [innerHTML]="!selected ? stripTags(game.description) : renderMarkdown(game.description)">
+    <div class="description-wrapper"
+         [class.saving]="isEditDescriptionSaving">
+      <ng-container *ngIf="!isEditDescriptionActive">
+        <div class="description"
+             [innerHTML]="!selected ? stripTags(game.description) : renderMarkdown(game.description)">
+        </div>
+
+        <button class="edit-description-button"
+                mat-icon-button
+                *ngIf="canEdit && !isEditDescriptionSaving"
+                (click)="editDescription($event)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="isEditDescriptionActive">
+        <mat-form-field appearance="standard">
+          <textarea matInput
+                    cdkTextareaAutosize
+                    [(ngModel)]="editDescriptionText"></textarea>
+        </mat-form-field>
+
+        <div class="controls">
+          <button mat-button
+                  (click)="isEditDescriptionActive = false">Cancel</button>
+          <button mat-button
+                  mat-raised-button
+                  color="primary"
+                  (click)="saveDescription()">Save</button>
+        </div>
+      </ng-container>
     </div>
+
     <mat-chip-list aria-label="Tags applied to this game">
 
       <mat-chip *ngIf="game.duration"

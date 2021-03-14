@@ -21,7 +21,7 @@ $avatar-size-mobile: 2rem;
       margin: 0.5rem 0;
     }
 
-    .description {
+    .description-wrapper {
       margin: 1rem 0;
     }
 
@@ -103,6 +103,41 @@ $avatar-size-mobile: 2rem;
   flex-grow: 1;
 }
 
+.description-wrapper {
+  position: relative;
+
+  &.saving {
+    opacity: 0.5;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      margin-left: .5rem;
+    }
+  }
+
+  .edit-description-button {
+    position: absolute;
+    bottom: 0;
+    right: 0.5rem;
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+
+  .mat-form-field {
+    width: 100%;
+  }
+
+  &:hover {
+    .edit-description-button {
+      opacity: 1;
+    }
+  }
+}
+
 mat-chip {
   cursor: pointer;
   mat-icon {
@@ -126,7 +161,7 @@ mat-chip {
   .note {
     margin-bottom: 2rem;
 
-    .description {
+    .description-wrapper {
       margin: 0;
     }
 

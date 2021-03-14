@@ -104,14 +104,13 @@ export class SuperAdminScreenComponent extends ScreenDirective {
     // this.deleteNewStuff(COLLECTIONS.NOTES);
 
     // this.resetIds();
-    this.userService.user$.subscribe(
-        () => {
-            // this.updateUserRefs(COLLECTIONS.NAMES);
-        });
+    this.userService.user$.subscribe(() => {});
   }
 
   private newIds = new Map<string, string>();
-  private shauvonId = '';
+  private oldShauvonId = '2cNzDZHc6bt8sERR0CDS';
+  private newShauvonId = '73dkDrAOsuXA0SB7ly7grnHoixn2';
+
 
   updateUserRefs(collection: string) {
     if (collection === 'names') {

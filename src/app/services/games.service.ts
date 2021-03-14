@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, CollectionReference, DocumentChangeAction, DocumentData, DocumentReference} from '@angular/fire/firestore';
 import firebase from 'firebase/app';
-import {BehaviorSubject, combineLatest, Observable, of, Subject} from 'rxjs';
-import {debounceTime, map, switchMap, tap} from 'rxjs/operators';
+import {BehaviorSubject, combineLatest, from, Observable, of, Subject} from 'rxjs';
+import {debounceTime, map, switchMap, take, tap} from 'rxjs/operators';
 import {COLLECTIONS, RANDOM} from '../shared/constants';
 import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, Note, NoteResponse, ParentType, Tag, TagResponse, User} from '../shared/types';
 import {UserService} from './user.service';
@@ -465,5 +465,18 @@ export class GamesService {
   getTags(): Observable<Tag[]> {
     return this.newTag$.pipe(
         switchMap(() => combineLatest([...this.tagmap.values()])));
+  }
+
+  saveDescription(game: Game, description: string): Observable<void> {
+    return this.userService.user$.pipe(
+        take(1), switchMap(user => {
+          return from(this.firestore
+                          .doc<GameResponse>(`${COLLECTIONS.GAMES}/${game.id}`)
+                          .update({
+                            description,
+                            modifiedUser: user.uid,
+                            dateModified: new Date()
+                          }));
+        }));
   }
 }
