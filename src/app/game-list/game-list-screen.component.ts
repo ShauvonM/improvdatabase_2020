@@ -3,8 +3,10 @@ import {Component} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {ActivatedRoute, NavigationStart, Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {filter, map, switchMap, tap} from 'rxjs/operators';
+import {filter, map, switchMap, take, tap} from 'rxjs/operators';
 import {GamesService} from '../services/games.service';
+import {TagsService} from '../services/tags.service';
+import {UserService} from '../services/user.service';
 import {RANDOM} from '../shared/constants';
 import {ScreenDirective} from '../shared/screen.directive';
 import {Game, GameMetadata, Tag} from '../shared/types';
@@ -27,6 +29,7 @@ export class GameListScreenComponent extends ScreenDirective {
   gamePages: Observable<Game[]>[] = [];
 
   isRandom = false;
+  canAddGames = false;
 
   get filters(): (GameMetadata|Tag)[] {
     return this.gameService.filters;
@@ -45,10 +48,12 @@ export class GameListScreenComponent extends ScreenDirective {
 
   constructor(
       private readonly gameService: GamesService,
+      private readonly tagService: TagsService,
       private readonly route: ActivatedRoute,
       private readonly router: Router,
       private readonly location: Location,
       private readonly snackBar: MatSnackBar,
+      private readonly userService: UserService,
   ) {
     super();
 
@@ -64,7 +69,7 @@ export class GameListScreenComponent extends ScreenDirective {
           .sort((a, b) => (a.min - b.min) + (a.max - b.max));
     }));
 
-    this.tags$ = this.gameService.getTags().pipe(map(tags => {
+    this.tags$ = this.tagService.fetchTags().pipe(map(tags => {
       return tags.sort((a, b) => a.name.localeCompare(b.name));
     }));
 
@@ -83,6 +88,9 @@ export class GameListScreenComponent extends ScreenDirective {
     this.gameService.filterChange$.subscribe(() => {
       this.reset();
     });
+
+    this.userService.user$.pipe(take(1)).subscribe(
+        user => this.canAddGames = !!user);
   }
 
   reset() {
@@ -138,12 +146,12 @@ export class GameListScreenComponent extends ScreenDirective {
     if ((selection as GameMetadata).type) {
       this.gameService.removeFilter(selection as GameMetadata);
     } else {
-      this.gameService.removeTagFilter(selection as Tag);
+      this.tagService.removeTagFilter(selection as Tag);
     }
   }
 
   addTagFilter(tag: Tag) {
-    this.gameService.addTagFilter(tag);
+    this.tagService.addTagFilter(tag);
   }
 
   selectGame(event: MouseEvent, game: Game) {
@@ -172,5 +180,9 @@ export class GameListScreenComponent extends ScreenDirective {
 
   gameTrackBy(index: number, game: Game): string {
     return game.id;
+  }
+
+  addGame() {
+    this.router.navigate(['addgame']);
   }
 }

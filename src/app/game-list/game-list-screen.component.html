@@ -107,6 +107,13 @@
 
 <div class="screen-margin"></div>
 
+<button mat-fab
+        class="fab"
+        (click)="addGame()"
+        *ngIf="canAddGames">
+  <mat-icon>add</mat-icon>
+</button>
+
 
 <ng-template #loading>
   <mat-spinner></mat-spinner>

@@ -1,0 +1,16 @@
+mat-form-field {
+  width: 100%;
+}
+
+mat-chip {
+  cursor: pointer;
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}

@@ -4,6 +4,7 @@ import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Observable, Subscription} from 'rxjs';
 import {GamesService} from 'src/app/services/games.service';
+import {TagsService} from 'src/app/services/tags.service';
 import {UserService} from 'src/app/services/user.service';
 import {SNACKBAR_DURATION_DEFAULT} from 'src/app/shared/constants';
 import {Game, GameMetadata, Name, NameVoteResponse, Note, Tag, User} from 'src/app/shared/types';
@@ -56,6 +57,7 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   constructor(
       private readonly gameService: GamesService,
       private readonly nameService: NamesService,
+      private readonly tagService: TagsService,
       private readonly markdownService: MarkdownService,
       private readonly location: Location,
       private readonly userService: UserService,
@@ -129,7 +131,7 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   }
 
   clickTag(item: Tag) {
-    this.gameService.addTagFilter(item);
+    this.tagService.addTagFilter(item);
     if (this.selected) {
       this.location.go('games');
     }

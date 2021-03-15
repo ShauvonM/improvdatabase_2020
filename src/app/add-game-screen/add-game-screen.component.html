@@ -1,0 +1,117 @@
+<div class="screen-margin"></div>
+
+<div class="screen-content">
+
+  <h1>Contribute to the Database</h1>
+
+  <form [formGroup]="gameForm">
+
+    <p>
+      <mat-form-field appearance="standard">
+        <mat-label>Name</mat-label>
+        <input matInput
+               type="text"
+               formControlName="name">
+        <mat-error *ngIf="gameForm.controls.name.invalid">{{getNameErrorMessage()}}</mat-error>
+      </mat-form-field>
+    </p>
+    <p>
+      <mat-form-field appearance="standard">
+        <mat-label>Description</mat-label>
+        <textarea matInput
+                  cdkTextareaAutosize
+                  formControlName="description"></textarea>
+        <mat-hint>You can't use HTML, but you can use <a
+             href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown</a>!
+        </mat-hint>
+      </mat-form-field>
+    </p>
+
+    <p>
+      <mat-chip-list aria-label="This game's duration and player count">
+
+        <mat-chip class="duration-chip"
+                  color="accent"
+                  selected="true"
+                  [matMenuTriggerFor]="durationMenu"
+                  [matTooltip]="selectedDuration.description">
+          <mat-icon>timer</mat-icon>
+          <span>{{selectedDuration.name}}</span>
+          <mat-icon>arrow_drop_down</mat-icon>
+        </mat-chip>
+
+        <mat-menu #durationMenu=matMenu>
+          <ng-container *ngIf="durations$ | async as durations">
+            <button mat-menu-item
+                    *ngFor="let duration of durations"
+                    [matTooltip]="duration.description"
+                    (click)="selectDuration(duration)">{{duration.name}}</button>
+          </ng-container>
+        </mat-menu>
+
+        <mat-chip class="playercount-chip"
+                  color="accent"
+                  selected="true"
+                  [matMenuTriggerFor]="playerCountMenu"
+                  [matTooltip]="selectedPlayerCount.description">
+          <mat-icon>group</mat-icon>
+          <span>{{selectedPlayerCount.name}}</span>
+          <mat-icon>arrow_drop_down</mat-icon>
+        </mat-chip>
+
+        <mat-menu #playerCountMenu=matMenu>
+          <ng-container *ngIf="playerCounts$ | async as playerCounts">
+            <button mat-menu-item
+                    *ngFor="let playerCount of playerCounts"
+                    [matTooltip]="playerCount.description"
+                    (click)="selectPlayerCount(playerCount)">{{playerCount.name}}</button>
+          </ng-container>
+        </mat-menu>
+
+      </mat-chip-list>
+    </p>
+
+    <p>
+      <mat-form-field class="tag-chip-list">
+        <mat-label>Additional tags</mat-label>
+        <mat-chip-list #tagList
+                       aria-label="Additional tags">
+          <mat-chip *ngFor="let tag of selectedTags"
+                    [removable]="true"
+                    [matTooltip]="tag.description !== 'None' ? tag.description : ''"
+                    (removed)="removeTag(tag)">
+            {{tag.name}}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <input placeholder="Add tag..."
+                 #tagInput
+                 formControlName="tagSearch"
+                 [matAutocomplete]="tagAutocomplete"
+                 [matChipInputFor]="tagList"
+                 [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                 (matChipInputTokenEnd)="addTag($event)">
+        </mat-chip-list>
+        <mat-autocomplete #tagAutocomplete="matAutocomplete"
+                          (optionSelected)="tagSelected($event)">
+          <mat-option *ngFor="let tag of filteredTags$ | async"
+                      [matTooltip]="tag.description !== 'None' ? tag.description : ''"
+                      [value]="tag">
+            {{tag.name}}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-hint>Remember to add one of "Show," "Exercise," or "Warmup"</mat-hint>
+      </mat-form-field>
+    </p>
+
+    <div class="controls">
+      <button mat-raised-button
+              type="submit"
+              [disabled]="!gameForm.valid || saving"
+              color="primary"
+              (click)="addGame()">Save</button>
+    </div>
+  </form>
+
+</div>
+
+<div class="screen-margin"></div>

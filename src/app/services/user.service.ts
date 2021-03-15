@@ -4,7 +4,7 @@ import {AngularFirestore} from '@angular/fire/firestore';
 import {Observable, of} from 'rxjs';
 import {map, switchMap, take} from 'rxjs/operators';
 import {COLLECTIONS} from '../shared/constants';
-import {User} from '../shared/types';
+import {BaseResponse, User} from '../shared/types';
 
 const staticUser: User = {
   uid: '',
@@ -91,5 +91,19 @@ export class UserService {
               })));
     }
     return this.usermap.get(uid);
+  }
+
+  getBaseCreationData(): Observable<BaseResponse> {
+    const baseCreationData: BaseResponse = {
+      addedUser: null,
+      dateAdded: new Date(),
+      modifiedUser: null,
+      dateModified: null,
+      isDeleted: false,
+    };
+    return this.user$.pipe(take(1), map(user => {
+                             baseCreationData.addedUser = user.uid;
+                             return baseCreationData;
+                           }));
   }
 }
