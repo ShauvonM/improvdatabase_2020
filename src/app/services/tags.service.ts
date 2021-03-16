@@ -16,6 +16,8 @@ export class TagsService {
   private tagFilters_ = new Set<Tag>();
   private tagFilter$: BehaviorSubject<Tag[]>;
 
+  private tags$: Observable<Tag[]>;
+
   constructor(
       private readonly firestore: AngularFirestore,
       private readonly userService: UserService,
@@ -46,16 +48,21 @@ export class TagsService {
   }
 
   fetchTags(): Observable<Tag[]> {
-    return this.firestore
-        .collection<TagResponse>(
-            COLLECTIONS.TAGS,
-            ref => {
-              return ref.orderBy('name').where('isDeleted', '==', false);
-            })
-        .valueChanges({idField: 'id'})
-        .pipe(throttleTime(500), switchMap(tags => {
-                return this.loadUsers(tags);
-              }));
+    if (!this.tags$) {
+      this.tags$ =
+          this.firestore
+              .collection<TagResponse>(
+                  COLLECTIONS.TAGS,
+                  ref => {
+                    return ref.orderBy('name').where('isDeleted', '==', false);
+                  })
+              .valueChanges({idField: 'id'})
+              .pipe(throttleTime(500), switchMap(tags => {
+                      return this.userService
+                          .addUsersToResponse<TagResponse, Tag>(tags);
+                    }));
+    }
+    return this.tags$;
   }
 
   getLoadedTags(): Observable<Tag[]> {
@@ -79,27 +86,14 @@ export class TagsService {
                     return {...tag.data() as TagResponse, id: tag.id} as
                         TagResponse;
                   }),
-                  switchMap(tag => this.loadUsers([tag])),
+                  switchMap(
+                      tag =>
+                          this.userService.addUsersToResponse<TagResponse, Tag>(
+                              [tag])),
                   map(([tag]) => tag)));
       this.tagLoaded$.next(null);
     }
     return this.tagmap.get(id);
-  }
-
-  private loadUsers(tags: TagResponse[]): Observable<Tag[]> {
-    const allTagUsers: Observable<Tag>[] = [];
-    for (const tag of tags) {
-      const combine = [
-        this.userService.getUser(tag.addedUser),
-        this.userService.getUser(tag.modifiedUser),
-        this.userService.getUser(tag.deletedUser),
-      ];
-      allTagUsers.push(combineLatest(combine).pipe(
-          map(([addedUser, modifiedUser, deletedUser]) => {
-            return {...tag, addedUser, modifiedUser, deletedUser} as Tag;
-          })))
-    }
-    return combineLatest(allTagUsers);
   }
 
   createTag(tagData: Partial<Tag>): Observable<DocumentReference<TagResponse>> {

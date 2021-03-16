@@ -7,6 +7,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {map, startWith, switchMap, take} from 'rxjs/operators';
+import {GameMetadataService} from '../services/game-metadata.service';
 import {GamesService} from '../services/games.service';
 import {TagsService} from '../services/tags.service';
 import {UserService} from '../services/user.service';
@@ -46,23 +47,26 @@ export class AddGameScreenComponent extends ScreenDirective {
   constructor(
       private readonly gameService: GamesService,
       private readonly tagService: TagsService,
+      private readonly gameMetadataService: GameMetadataService,
       private readonly userService: UserService,
       private readonly snackBar: MatSnackBar,
       private readonly router: Router,
   ) {
     super();
 
-    this.durations$ = this.gameService.getMetadatas().pipe(map(data => {
-      return [...data.values()]
-          .filter(m => m.type === 'duration')
-          .sort((a, b) => (a.min - b.min) + (a.max - b.max));
-    }));
+    this.durations$ =
+        this.gameMetadataService.fetchMetadatas().pipe(map(data => {
+          return [...data.values()]
+              .filter(m => m.type === 'duration')
+              .sort((a, b) => (a.min - b.min) + (a.max - b.max));
+        }));
 
-    this.playerCounts$ = this.gameService.getMetadatas().pipe(map(data => {
-      return [...data.values()]
-          .filter(m => m.type === 'playerCount')
-          .sort((a, b) => (a.min - b.min) + (a.max - b.max));
-    }));
+    this.playerCounts$ =
+        this.gameMetadataService.fetchMetadatas().pipe(map(data => {
+          return [...data.values()]
+              .filter(m => m.type === 'playerCount')
+              .sort((a, b) => (a.min - b.min) + (a.max - b.max));
+        }));
 
     this.filteredTags$ = this.gameForm.controls['tagSearch'].valueChanges.pipe(
         startWith(''), switchMap(term => {

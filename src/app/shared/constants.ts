@@ -17,6 +17,9 @@ export const RANDOM = 'random';
 
 export const SNACKBAR_DURATION_DEFAULT = 3000;
 
+export const DEFAULT_PAGE_SIZE = 10;
+export const NUM_SHARDS = 10;
+
 export function timestampToDate(timestamp: Timestamp): Date {
   const millis = (timestamp.seconds * 1000) + (timestamp.nanoseconds / 1000000);
   return new Date(millis);

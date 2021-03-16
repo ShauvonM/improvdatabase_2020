@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
 import {AngularFireAuth} from '@angular/fire/auth';
 import {AngularFirestore} from '@angular/fire/firestore';
-import {Observable, of} from 'rxjs';
+import {combineLatest, Observable, of} from 'rxjs';
 import {map, switchMap, take} from 'rxjs/operators';
 import {COLLECTIONS} from '../shared/constants';
-import {BaseResponse, User} from '../shared/types';
+import {BaseClass, BaseResponse, User} from '../shared/types';
 
 const staticUser: User = {
   uid: '',
@@ -105,5 +105,27 @@ export class UserService {
                              baseCreationData.addedUser = user.uid;
                              return baseCreationData;
                            }));
+  }
+
+  addUsersToResponse<Q extends BaseResponse, T extends BaseClass>(items: Q[]):
+      Observable<T[]> {
+    const allUsers: Observable<T>[] = [];
+    for (const item of items) {
+      const combine = [
+        this.getUser(item.addedUser),
+        this.getUser(item.modifiedUser),
+        this.getUser(item.deletedUser),
+      ];
+      allUsers.push(combineLatest(combine).pipe(
+          map(([addedUser, modifiedUser, deletedUser]) => {
+            return {
+              ...item,
+              addedUser,
+              modifiedUser,
+              deletedUser,
+            } as unknown as T;
+          })))
+    }
+    return combineLatest(allUsers);
   }
 }

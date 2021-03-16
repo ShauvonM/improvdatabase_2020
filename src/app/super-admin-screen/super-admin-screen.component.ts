@@ -1,7 +1,10 @@
 import {Component} from '@angular/core';
 import {AngularFirestore, DocumentReference} from '@angular/fire/firestore';
-import {take} from 'rxjs/operators';
+import {from} from 'rxjs';
+import {switchMap, take} from 'rxjs/operators';
+import {CounterService} from '../services/counter.service';
 import {UserService} from '../services/user.service';
+import {COLLECTIONS} from '../shared/constants';
 import {ScreenDirective} from '../shared/screen.directive';
 import {Base, BaseResponse, GameMetadataResponse, GameResponse, NameResponse, NoteResponse, TagResponse, Timestamp, User} from '../shared/types';
 
@@ -94,6 +97,7 @@ export class SuperAdminScreenComponent extends ScreenDirective {
   constructor(
       private readonly firestore: AngularFirestore,
       private readonly userService: UserService,
+      private readonly counterService: CounterService,
   ) {
     super();
 
@@ -104,13 +108,33 @@ export class SuperAdminScreenComponent extends ScreenDirective {
     // this.deleteNewStuff(COLLECTIONS.NOTES);
 
     // this.resetIds();
-    this.userService.user$.subscribe(() => {});
+    this.userService.user$.subscribe(
+        () => {
+            // this.countPosts();
+        });
   }
 
   private newIds = new Map<string, string>();
   private oldShauvonId = '2cNzDZHc6bt8sERR0CDS';
   private newShauvonId = '73dkDrAOsuXA0SB7ly7grnHoixn2';
 
+
+
+  countPosts() {
+    this.firestore
+        .collection(
+            COLLECTIONS.GAMES, ref => ref.where('isDeleted', '==', false))
+        .valueChanges()
+        .pipe(take(1), switchMap(games => {
+                const count = games.length;
+                console.log('setting count', count);
+                return from(this.firestore.doc('/counters/games/shards/0')
+                                .update({count}));
+              }))
+        .subscribe(() => {
+          console.log('done!');
+        });
+  }
 
   updateUserRefs(collection: string) {
     if (collection === 'names') {

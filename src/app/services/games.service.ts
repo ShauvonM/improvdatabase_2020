@@ -1,24 +1,29 @@
 import {Injectable} from '@angular/core';
-import {AngularFirestore, CollectionReference, DocumentChangeAction, DocumentData, DocumentReference} from '@angular/fire/firestore';
+import {AngularFirestore, CollectionReference, DocumentData, DocumentReference} from '@angular/fire/firestore';
 import firebase from 'firebase/app';
-import {BehaviorSubject, combineLatest, from, Observable, of, Subject, throwError} from 'rxjs';
-import {debounceTime, map, switchMap, take, tap} from 'rxjs/operators';
-import {COLLECTIONS, RANDOM} from '../shared/constants';
-import {BaseClass, BaseResponse, Game, GameMetadata, GameMetadataResponse, GameResponse, NameResponse, Note, NoteResponse, ParentType, Tag, TagResponse, User} from '../shared/types';
+import {combineLatest, from, Observable, of, throwError} from 'rxjs';
+import {debounceTime, map, switchMap, take} from 'rxjs/operators';
+import {COLLECTIONS, DEFAULT_PAGE_SIZE, RANDOM} from '../shared/constants';
+import {BaseGame, BaseNote, BaseResponse, Game, GameMetadata, GameResponse, NameResponse, Note, NoteResponse, ParentType, Tag, TagResponse} from '../shared/types';
+import {COUNTERS, CounterService} from './counter.service';
+import {GameMetadataService} from './game-metadata.service';
 import {TagsService} from './tags.service';
 import {UserService} from './user.service';
 
-const PAGE_SIZE = 20;
-const LS_FILTER = 'metadata-filter';
+interface NoteResponseWithParent extends BaseNote, BaseResponse {
+  parent: ParentType;
+  parentCollection: string;
+}
+
+interface GameResponseWithMetadata extends BaseResponse, BaseGame {
+  duration: GameMetadata;
+  playerCount: GameMetadata;
+  tags: Tag[];
+}
 
 @Injectable({providedIn: 'root'})
 export class GamesService {
-  private metadatas$: Observable<Map<string, GameMetadata>>;
-
-  private metadataFilters = new Set<GameMetadata>();
-  private metadataFilter$: BehaviorSubject<GameMetadata[]>;
-
-  private filterChangeSubject = new Subject<void>();
+  // private filterChangeSubject = new Subject<void>();
 
   private gamesAreDone = false;
 
@@ -28,29 +33,14 @@ export class GamesService {
       private readonly firestore: AngularFirestore,
       private readonly userService: UserService,
       private readonly tagService: TagsService,
-  ) {
-    const storageFilters = JSON.parse(localStorage.getItem(LS_FILTER));
-    if (storageFilters) {
-      this.metadataFilters =
-          new Set(storageFilters.metadataFilters as GameMetadata[]);
-    }
-    this.metadataFilter$ =
-        new BehaviorSubject<GameMetadata[]>([...this.metadataFilters.values()]);
-
-    this.tagService.tagFilterChange$.subscribe(filters => {
-      if (filters.length) {
-        // Firestore can't combine these filters right now.
-        this.metadataFilters.clear();
-        this.metadataFilter$.next([]);
-        this.saveFilters();
-      }
-      this.filterChangeSubject.next();
-    })
-  }
+      private readonly gameMetadataService: GameMetadataService,
+      private readonly counterService: CounterService,
+  ) {}
 
   get filters(): (GameMetadata|Tag)[] {
     return [
-      ...this.metadataFilters.values(), ...this.tagService.tagFilters.values()
+      ...this.gameMetadataService.metadataFilters.values(),
+      ...this.tagService.tagFilters.values()
     ];
   }
 
@@ -62,72 +52,53 @@ export class GamesService {
     return this.selectedGameSlug_;
   }
 
-  get filterChange$(): Observable<any> {
-    return this.filterChangeSubject.asObservable();
+  // get filterChange$(): Observable<any> {
+  //   return this.filterChangeSubject.asObservable();
+  // }
+
+  private populateGameData({games, metamap, tags}: {
+    games: GameResponse[]; metamap: Map<string, GameMetadata>; tags: Tag[]
+  }): Observable<Game[]> {
+    const gamesWithMetadata: GameResponseWithMetadata[] = [];
+    for (const game of games) {
+      gamesWithMetadata.push({
+        ...game,
+        playerCount: metamap.get(game.playerCount.id),
+        duration: metamap.get(game.duration.id),
+        tags: tags.filter(t => game.tags.findIndex(tr => tr.id === t.id) > -1)
+      });
+    }
+    return this.userService.addUsersToResponse<GameResponseWithMetadata, Game>(
+        gamesWithMetadata);
   }
 
-  addFilter(selection: GameMetadata) {
-    this.metadataFilters.add(selection);
-    this.metadataFilter$.next([...this.metadataFilters.values()]);
-    this.filterChangeSubject.next();
-    this.saveFilters();
-  }
-
-  removeFilter(selection: GameMetadata) {
-    this.metadataFilters.delete(selection);
-    this.metadataFilter$.next([...this.metadataFilters.values()]);
-    this.filterChangeSubject.next();
-    this.saveFilters();
-  }
-
-  saveFilters() {
-    localStorage.setItem(LS_FILTER, JSON.stringify({
-      metadataFilters: ([...this.metadataFilters.values()])
-                           .map(m => ({id: m.id, name: m.name, type: m.type})),
-    }));
-  }
-
-  fetchGamePage(startAfter?: string): Observable<Game[]> {
+  fetchGamePage(pageSize: number, startAfter?: string): Observable<Game[]> {
     this.selectedGameSlug_ = '';
     return combineLatest([
-             this.metadataFilter$,
+             this.gameMetadataService.metadataFilterChange$,
              this.tagService.tagFilterChange$,
            ])
         .pipe(
             debounceTime(5),
-            tap(() => {
+            switchMap(() => {
               this.gamesAreDone = false;
+              return combineLatest([
+                this.firestore
+                    .collection<GameResponse>(
+                        COLLECTIONS.GAMES,
+                        ref =>
+                            this.createGameQuery({ref, pageSize, startAfter}))
+                    .valueChanges({idField: 'id'}),
+                this.gameMetadataService.fetchMetadatas(),
+                this.tagService.fetchTags(),
+              ]);
             }),
-            switchMap(() => this.fetchGameData(startAfter)),
-            map(([
-                  games,
-                  metamap,
-                ]) => {
-              if (games.length < PAGE_SIZE) {
+            switchMap(([games, metamap, tags]) => {
+              if (games.length < pageSize) {
                 this.gamesAreDone = true;
               }
-              return [
-                this.translateSnapshots<GameResponse>(games), metamap
-              ] as [GameResponse[], Map<string, GameMetadata>];
+              return this.populateGameData({games, metamap, tags});
             }),
-            switchMap(
-                ([
-                  games,
-                  metamap,
-                ]) =>
-                    this.switchResponseToClass<GameResponse, Game>(
-                        games,
-                        game => {
-                          return {
-                            playerCount: game.playerCount ?
-                                metamap.get(game.playerCount.id) :
-                                null,
-                            duration: game.duration ?
-                                metamap.get(game.duration.id) :
-                                null,
-                            tags: [],
-                          };
-                        })),
         );
   }
 
@@ -142,43 +113,47 @@ export class GamesService {
              this.firestore
                  .collection<GameResponse>(
                      COLLECTIONS.GAMES,
-                     ref => this.createGameQuery({ref, slug, randomId}))
+                     ref => this.createGameQuery(
+                         {ref, pageSize: 1, slug, randomId}))
                  .valueChanges({idField: 'id'}),
-             this.getMetadatas()
+             this.gameMetadataService.fetchMetadatas(),
+             this.tagService.fetchTags(),
            ])
         .pipe(
-            switchMap(([games, metamap]) => {
+            switchMap(([games, metamap, tags]) => {
               if (!games.length && slug === RANDOM) {
                 console.log('>= did not match');
                 return this.firestore
                     .collection<GameResponse>(
-                        COLLECTIONS.GAMES,
-                        ref => this.createGameQuery(
-                            {ref, slug, randomId, randomBackup: true}))
+                        COLLECTIONS.GAMES, ref => this.createGameQuery({
+                          ref,
+                          pageSize: 1,
+                          slug,
+                          randomId,
+                          randomBackup: true
+                        }))
                     .valueChanges({idField: 'id'})
                     .pipe(map(games => {
-                      return {games, metamap};
+                      return {games, metamap, tags};
                     }));
               }
-
-              return of({games, metamap});
+              return of({games, metamap, tags});
             }),
-            switchMap(
-                ({
-                  games,
-                  metamap,
-                }) =>
-                    this.switchResponseToClass<GameResponse, Game>(
-                        games,
-                        game => {
-                          const playerCount = game.playerCount ?
-                              metamap.get(game.playerCount.id) :
-                              null;
-                          const duration = game.duration ?
-                              metamap.get(game.duration.id) :
-                              null;
-                          return {playerCount, duration};
-                        })),
+            switchMap(({games, metamap, tags}) => {
+              const gamesWithMetadata: GameResponseWithMetadata[] = [];
+              for (const game of games) {
+                gamesWithMetadata.push({
+                  ...game,
+                  playerCount: metamap.get(game.playerCount.id),
+                  duration: metamap.get(game.duration.id),
+                  tags: tags.filter(
+                      t => game.tags.findIndex(tr => tr.id === t.id) > -1)
+                });
+              }
+              return this.userService
+                  .addUsersToResponse<GameResponseWithMetadata, Game>(
+                      gamesWithMetadata);
+            }),
             map(games => {
               console.log('game data', games[0]);
               this.selectedGameSlug_ = games[0].slug;
@@ -187,7 +162,6 @@ export class GamesService {
   }
 
   fetchNotes(game: Game): Observable<Note[]> {
-    let noteResponsesTmp: NoteResponse[];
     return this.firestore
         .collection<NoteResponse>(
             COLLECTIONS.NOTES,
@@ -217,13 +191,12 @@ export class GamesService {
         .valueChanges({idField: 'id'})
         .pipe(
             switchMap(noteResponses => {
-              noteResponsesTmp = noteResponses;
-              const parents: Observable<ParentType>[] = [];
+              const notesWithParents: Observable<NoteResponseWithParent>[] = [];
               for (const noteResponse of noteResponses) {
                 const path = noteResponse.parent.path;
-                const collection = path.split('/')[0];
+                const parentCollection = path.split('/')[0];
                 let obs: Observable<ParentType>;
-                switch (collection) {
+                switch (parentCollection) {
                   case COLLECTIONS.TAGS:
                     obs = this.tagService.fetchTag(noteResponse.parent);
                     break;
@@ -231,37 +204,36 @@ export class GamesService {
                     obs = of(game);
                     break;
                   case COLLECTIONS.METADATAS:
-                    obs = this.getMetadata(noteResponse.parent);
+                    obs = this.gameMetadataService.getMetadata(
+                        noteResponse.parent);
                     break;
                   default:
                     break;
                 }
                 if (obs) {
-                  parents.push(obs);
+                  notesWithParents.push(obs.pipe(map(parent => {
+                    return {...noteResponse, parent, parentCollection};
+                  })));
                 }
               }
-              return combineLatest(parents);
+              return combineLatest(notesWithParents);
             }),
-            switchMap((parents) => {
-              return this.switchResponseToClass<NoteResponse, Note>(
-                  noteResponsesTmp, (noteResponse: NoteResponse) => {
-                    const parent =
-                        parents.find(p => p.id === noteResponse.parent.id);
-                    return {
-                      parent,
-                      parentCollection: noteResponse.parent.path.split('/')[0]
-                    };
-                  });
+            switchMap(notesWithParents => {
+              return this.userService
+                  .addUsersToResponse<NoteResponseWithParent, Note>(
+                      notesWithParents);
             }));
   }
 
-  private createGameQuery({ref, startAfter, slug, randomId, randomBackup}: {
-    ref: CollectionReference<DocumentData>,
-    startAfter?: string,
-    slug?: string,
-    randomId?: string,
-    randomBackup?: boolean,
-  }) {
+  private createGameQuery(
+      {ref, pageSize, startAfter, slug, randomId, randomBackup}: {
+        ref: CollectionReference<DocumentData>,
+        pageSize: number,
+        startAfter?: string,
+        slug?: string,
+        randomId?: string,
+        randomBackup?: boolean,
+      }) {
     let query = ref.where('isDeleted', '==', false);
 
     if (slug) {
@@ -276,7 +248,8 @@ export class GamesService {
       query = query.orderBy('name').orderBy('dateModified', 'desc');
     }
 
-    const metadataFilters = [...this.metadataFilters.values()];
+    const metadataFilters =
+        [...this.gameMetadataService.metadataFilters.values()];
     const tagFilters = [...this.tagService.tagFilters.values()];
 
     if (metadataFilters && metadataFilters.length) {
@@ -309,95 +282,7 @@ export class GamesService {
     if (startAfter) {
       query = query.startAfter(startAfter);
     }
-    return query.limit(slug ? 1 : PAGE_SIZE);
-  }
-
-  private fetchGameData(startAfter?: string): Observable<
-      [DocumentChangeAction<GameResponse>[], Map<string, GameMetadata>]> {
-    return combineLatest([
-      this.firestore
-          .collection<GameResponse>(
-              COLLECTIONS.GAMES, ref => this.createGameQuery({ref, startAfter}))
-          .snapshotChanges(),
-      // Include all of the metadata items.
-      this.getMetadatas()
-    ])
-  }
-
-  private translateSnapshot<T>(s: DocumentChangeAction<T>): T {
-    const data = s.payload.doc.data();
-    const id = s.payload.doc.id;
-    return {id, ...data};
-  }
-
-  private translateSnapshots<T>(snapshots: DocumentChangeAction<T>[]): T[] {
-    return snapshots.map(s => this.translateSnapshot(s));
-  }
-
-  private switchResponseToClass<Q extends BaseResponse, T extends BaseClass>(
-      items: Q[]|GameResponse[],
-      getOtherProps?: (item: Q|GameResponse) => Partial<T>): Observable<T[]> {
-    const metaObservables: Observable<T>[] = [];
-    for (const item of items) {
-      const combine: Observable<Tag|User>[] = [
-        this.userService.getUser(item.addedUser),
-        this.userService.getUser(item.modifiedUser),
-        this.userService.getUser(item.deletedUser),
-      ];
-      if ((item as GameResponse).tags) {
-        for (const tag of (item as GameResponse).tags) {
-          combine.push(this.tagService.fetchTag(tag));
-        }
-      }
-      metaObservables.push(combineLatest(combine).pipe(
-          map(([addedUser, modifiedUser, deletedUser, ...tags]) => {
-            let otherProps: Partial<T> = {};
-            if (getOtherProps) {
-              otherProps = getOtherProps(item);
-            }
-            if (tags && tags.length) {
-              (otherProps as Partial<Game>).tags = (tags as Tag[]);
-            }
-            return {
-              ...item as any,
-              addedUser,
-              modifiedUser,
-              deletedUser,
-              ...otherProps,
-            } as T
-          })));
-    }
-
-    return combineLatest(metaObservables);
-  }
-
-  getMetadatas(): Observable<Map<string, GameMetadata>> {
-    if (!this.metadatas$) {
-      this.metadatas$ =
-          this.firestore.collection<GameMetadataResponse>(COLLECTIONS.METADATAS)
-              .snapshotChanges()
-              .pipe(
-                  map(metadatas =>
-                          this.translateSnapshots<GameMetadataResponse>(
-                              metadatas)),
-                  switchMap(
-                      metadatas =>
-                          this.switchResponseToClass<
-                              GameMetadataResponse, GameMetadata>(metadatas)),
-                  map(metadatas => {
-                    const map = new Map<string, GameMetadata>();
-                    for (const metadata of metadatas) {
-                      map.set(metadata.id, metadata);
-                    }
-                    return map;
-                  }));
-    }
-    return this.metadatas$;
-  }
-
-  getMetadata(ref: DocumentReference): Observable<GameMetadata> {
-    return this.getMetadatas().pipe(
-        map(metadataMap => metadataMap.get(ref.id)));
+    return query.limit(slug ? 1 : pageSize);
   }
 
   saveDescription(game: Game, description: string): Observable<void> {
@@ -433,7 +318,8 @@ export class GamesService {
               .collection<GameResponse>(
                   COLLECTIONS.GAMES,
                   ref => {
-                    return this.createGameQuery({ref, slug});
+                    return this.createGameQuery(
+                        {ref, pageSize: DEFAULT_PAGE_SIZE, slug});
                   })
               .valueChanges({idField: 'id'})
               .pipe(take(1));
@@ -498,6 +384,7 @@ export class GamesService {
                           .add(gameData));
         }),
         switchMap(gameRef => {
+          this.counterService.incrementCounter(COUNTERS.GAMES);
           // Create the name doc.
           const gamePath = gameRef.path;
           const nameData: NameResponse = {

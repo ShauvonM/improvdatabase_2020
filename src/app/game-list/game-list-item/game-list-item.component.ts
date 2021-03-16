@@ -3,6 +3,7 @@ import {Location} from '@angular/common';
 import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Observable, Subscription} from 'rxjs';
+import {GameMetadataService} from 'src/app/services/game-metadata.service';
 import {GamesService} from 'src/app/services/games.service';
 import {TagsService} from 'src/app/services/tags.service';
 import {UserService} from 'src/app/services/user.service';
@@ -58,6 +59,7 @@ export class GameListItemComponent implements OnInit, OnDestroy {
       private readonly gameService: GamesService,
       private readonly nameService: NamesService,
       private readonly tagService: TagsService,
+      private readonly metadataService: GameMetadataService,
       private readonly markdownService: MarkdownService,
       private readonly location: Location,
       private readonly userService: UserService,
@@ -124,7 +126,7 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   }
 
   clickMeta(item: GameMetadata) {
-    this.gameService.addFilter(item);
+    this.metadataService.addFilter(item);
     if (this.selected) {
       this.location.go('games');
     }
