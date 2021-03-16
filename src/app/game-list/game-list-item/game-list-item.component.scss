@@ -115,7 +115,7 @@ $avatar-size-mobile: 2rem;
     justify-content: flex-end;
 
     button {
-      margin-left: .5rem;
+      margin-left: 0.5rem;
     }
   }
 
@@ -143,6 +143,19 @@ mat-chip {
   mat-icon {
     margin-right: 0.5rem;
   }
+}
+
+.tag-list {
+  .tag-add-wrapper {
+    height: 2rem;
+    margin: .25rem;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+  }
+  // mat-form-field {
+  //   margin: -0.75rem 0 -0.5rem 0.5rem;
+  // }
 }
 
 .aka-name-list {

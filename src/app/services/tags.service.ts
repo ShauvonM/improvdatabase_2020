@@ -103,6 +103,7 @@ export class TagsService {
               this.firestore.collection<TagResponse>(COLLECTIONS.TAGS).add({
                 ...baseCreationData,
                 name: tagData.name,
+                description: tagData.description
               }));
         }));
   }

@@ -1,22 +1,30 @@
-import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {Location} from '@angular/common';
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
+import {Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Observable, Subscription} from 'rxjs';
+import {map, startWith, switchMap, take} from 'rxjs/operators';
 import {GameMetadataService} from 'src/app/services/game-metadata.service';
 import {GamesService} from 'src/app/services/games.service';
 import {TagsService} from 'src/app/services/tags.service';
 import {UserService} from 'src/app/services/user.service';
+import {createToggle} from 'src/app/shared/anim';
 import {SNACKBAR_DURATION_DEFAULT} from 'src/app/shared/constants';
 import {Game, GameMetadata, Name, NameVoteResponse, Note, Tag, User} from 'src/app/shared/types';
 import {MarkdownService} from '../../services/markdown.service';
 import {NamesService, NameVoteEffect} from '../../services/names.service';
+import {NoteService} from '../../services/note.service';
 
 
 @Component({
   selector: 'app-game-list-item',
   templateUrl: './game-list-item.component.html',
-  styleUrls: ['./game-list-item.component.scss']
+  styleUrls: ['./game-list-item.component.scss'],
+  animations: [createToggle(
+      'width', {'width': '0px', 'overflow': 'hidden'},
+      {'width': '*', 'overflow': 'visible'}, 200)]
 })
 export class GameListItemComponent implements OnInit, OnDestroy {
   game_: Game;
@@ -44,6 +52,15 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   isEditDescriptionSaving = false;
   editDescriptionText = '';
 
+  isAddTagShown = false;
+
+  tagInputControl = new FormControl('');
+  filteredTags$: Observable<Tag[]>;
+  addedTags: string[] = [];
+  // selectedTags: Partial<Tag>[] = [];
+
+  @ViewChild('tagInput') tagSearchInput: ElementRef<HTMLInputElement>;
+
   get selected() {
     return this.game && this.game.slug === this.gameService.selectedGameSlug;
   }
@@ -53,10 +70,13 @@ export class GameListItemComponent implements OnInit, OnDestroy {
         (this.user.superUser || this.game.addedUser.uid === this.user.uid);
   }
 
-  readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+  get canAddTags() {
+    return this.selected && this.user;
+  }
 
   constructor(
       private readonly gameService: GamesService,
+      private readonly noteService: NoteService,
       private readonly nameService: NamesService,
       private readonly tagService: TagsService,
       private readonly metadataService: GameMetadataService,
@@ -70,9 +90,23 @@ export class GameListItemComponent implements OnInit, OnDestroy {
     if (this.selected) {
       this.names$ = this.nameService.fetchNames(this.game);
       this.nameVote$ = this.nameService.fetchMyNameVotes(this.game);
-      this.notes$ = this.gameService.fetchNotes(this.game);
+      this.notes$ = this.noteService.fetchNotes(this.game);
       this.userSubscription =
           this.userService.user$.subscribe(user => this.user = user);
+
+      this.filteredTags$ = this.tagInputControl.valueChanges.pipe(
+          startWith(''), switchMap(term => {
+            return this.tagService.fetchTags();
+          }),
+          map(tags => {
+            const term = this.tagInputControl.value || '';
+            return term ?
+                tags.filter(
+                    tag =>
+                        tag.name.toLowerCase().includes(term.toLowerCase()) &&
+                        !this.addedTags.includes(tag.name)) :
+                tags.slice();
+          }));
     }
   }
 
@@ -210,10 +244,67 @@ export class GameListItemComponent implements OnInit, OnDestroy {
     this.isEditDescriptionActive = false;
     this.isEditDescriptionSaving = true;
 
-    this.gameService.saveDescription(this.game, this.editDescriptionText)
+    this.gameService
+        .updateGame(this.game, {description: this.editDescriptionText})
         .subscribe(
             () => {
                 // ...
             });
+  }
+
+  showAddTag() {
+    this.isAddTagShown = true;
+    setTimeout(() => {
+      this.tagSearchInput.nativeElement.focus();
+    });
+  }
+
+  canRemoveTag(tag: Tag) {
+    return this.addedTags.includes(tag.name) ||
+        (this.user && this.user.superUser);
+  }
+
+  removeTag(tag: Tag) {
+    const index = this.addedTags.findIndex(t => t === tag.name);
+    if (index > -1 || (this.user && this.user.superUser)) {
+      this.addedTags.splice(index, 1);
+      const tagIndex = this.game.tags.findIndex(t => t.id === tag.id);
+      const allTags = this.game.tags.slice();
+      allTags.splice(tagIndex, 1);
+      this.gameService.updateGame(this.game, {tags: allTags}).subscribe();
+    }
+  }
+
+  addTag(event: MatChipInputEvent) {
+    const value = event.value;
+    if (value.trim()) {
+      this.filteredTags$.pipe(take(1)).subscribe(tags => {
+        let selectedTag: Partial<Tag> =
+            tags.find(t => t.name.toLowerCase() === value.toLowerCase());
+        if (!selectedTag) {
+          selectedTag = {
+            name: value,
+            description: '',
+          };
+        }
+        const allTags = [...this.game.tags, selectedTag];
+        this.gameService.updateGame(this.game, {tags: allTags}).subscribe();
+        this.addedTags.push(selectedTag.name);
+        this.tagInputControl.setValue('');
+        this.tagSearchInput.nativeElement.value = '';
+      });
+    }
+  }
+
+  tagSelected(event: MatAutocompleteSelectedEvent) {
+    if (event.option.value) {
+      const selectedTag: Tag = event.option.value;
+      const allTags = [...this.game.tags, selectedTag];
+      this.gameService.updateGame(this.game, {tags: allTags}).subscribe();
+
+      this.addedTags.push(selectedTag.name);
+      this.tagInputControl.setValue('');
+    }
+    this.tagSearchInput.nativeElement.value = '';
   }
 }

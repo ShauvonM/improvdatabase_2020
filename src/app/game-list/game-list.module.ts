@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatBadgeModule} from '@angular/material/badge';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -23,23 +24,16 @@ import {GameListScreenComponent} from './game-list-screen.component';
 @NgModule({
   declarations: [GameListScreenComponent, GameListItemComponent],
   imports: [
-    CommonModule,
-    MatProgressSpinnerModule,
-    MatChipsModule,
-    MatIconModule,
-    MatMenuModule,
-    MatButtonModule,
-    SharedModule,
-    MatTooltipModule,
-    MatDividerModule,
-    MatCardModule,
-    MatExpansionModule,
-    MatBadgeModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSnackBarModule,
-    FormsModule,
-    MatPaginatorModule,
+    CommonModule,        MatProgressSpinnerModule,
+    MatChipsModule,      MatIconModule,
+    MatMenuModule,       MatButtonModule,
+    SharedModule,        MatTooltipModule,
+    MatDividerModule,    MatCardModule,
+    MatExpansionModule,  MatBadgeModule,
+    MatFormFieldModule,  MatInputModule,
+    MatSnackBarModule,   FormsModule,
+    MatPaginatorModule,  MatAutocompleteModule,
+    ReactiveFormsModule,
   ]
 })
 export class GameListModule {

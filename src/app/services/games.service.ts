@@ -4,16 +4,11 @@ import firebase from 'firebase/app';
 import {combineLatest, from, Observable, of, throwError} from 'rxjs';
 import {debounceTime, map, switchMap, take} from 'rxjs/operators';
 import {COLLECTIONS, DEFAULT_PAGE_SIZE, RANDOM} from '../shared/constants';
-import {BaseGame, BaseNote, BaseResponse, Game, GameMetadata, GameResponse, NameResponse, Note, NoteResponse, ParentType, Tag, TagResponse} from '../shared/types';
+import {BaseGame, BaseResponse, Game, GameMetadata, GameResponse, NameResponse, Tag, TagResponse} from '../shared/types';
 import {COUNTERS, CounterService} from './counter.service';
 import {GameMetadataService} from './game-metadata.service';
 import {TagsService} from './tags.service';
 import {UserService} from './user.service';
-
-interface NoteResponseWithParent extends BaseNote, BaseResponse {
-  parent: ParentType;
-  parentCollection: string;
-}
 
 interface GameResponseWithMetadata extends BaseResponse, BaseGame {
   duration: GameMetadata;
@@ -161,70 +156,6 @@ export class GamesService {
             }));
   }
 
-  fetchNotes(game: Game): Observable<Note[]> {
-    return this.firestore
-        .collection<NoteResponse>(
-            COLLECTIONS.NOTES,
-            ref => {
-              // TODO: Do another query for the current user's private notes.
-              let query = ref.orderBy('dateModified', 'desc')
-                              .where('isDeleted', '==', false)
-                              .where('public', '==', true);
-              const parents: DocumentReference[] = [];
-              parents.push(
-                  this.firestore.doc(`/${COLLECTIONS.GAMES}/${game.id}`).ref);
-              parents.push(
-                  this.firestore
-                      .doc(`/${COLLECTIONS.METADATAS}/${game.duration.id}`)
-                      .ref);
-              parents.push(
-                  this.firestore
-                      .doc(`/${COLLECTIONS.METADATAS}/${game.playerCount.id}`)
-                      .ref);
-              for (const tag of game.tags) {
-                parents.push(
-                    this.firestore.doc(`/${COLLECTIONS.TAGS}/${tag.id}`).ref);
-              }
-              query = query.where('parent', 'in', parents);
-              return query;
-            })
-        .valueChanges({idField: 'id'})
-        .pipe(
-            switchMap(noteResponses => {
-              const notesWithParents: Observable<NoteResponseWithParent>[] = [];
-              for (const noteResponse of noteResponses) {
-                const path = noteResponse.parent.path;
-                const parentCollection = path.split('/')[0];
-                let obs: Observable<ParentType>;
-                switch (parentCollection) {
-                  case COLLECTIONS.TAGS:
-                    obs = this.tagService.fetchTag(noteResponse.parent);
-                    break;
-                  case COLLECTIONS.GAMES:
-                    obs = of(game);
-                    break;
-                  case COLLECTIONS.METADATAS:
-                    obs = this.gameMetadataService.getMetadata(
-                        noteResponse.parent);
-                    break;
-                  default:
-                    break;
-                }
-                if (obs) {
-                  notesWithParents.push(obs.pipe(map(parent => {
-                    return {...noteResponse, parent, parentCollection};
-                  })));
-                }
-              }
-              return combineLatest(notesWithParents);
-            }),
-            switchMap(notesWithParents => {
-              return this.userService
-                  .addUsersToResponse<NoteResponseWithParent, Note>(
-                      notesWithParents);
-            }));
-  }
-
   private createGameQuery(
       {ref, pageSize, startAfter, slug, randomId, randomBackup}: {
         ref: CollectionReference<DocumentData>,
@@ -285,18 +216,53 @@ export class GamesService {
     return query.limit(slug ? 1 : pageSize);
   }
 
-  saveDescription(game: Game, description: string): Observable<void> {
+  updateGame(game: Game, updates: {
+    description?: string;
+    tags?: Partial<Tag>[] | DocumentReference[]
+  }): Observable<void> {
+    let usableUpdates: {
+      description?: string;
+      tags?: DocumentReference[]; modifiedUser: string; dateModified: Date;
+    };
     return this.userService.user$.pipe(
-        take(1), switchMap(user => {
+        take(1), switchMap(u => {
+          usableUpdates = {modifiedUser: u.uid, dateModified: new Date()};
+          return this.setupTags(updates.tags as Tag[]);
+        }),
+        switchMap(tagRefs => {
+          if (tagRefs && tagRefs.length) {
+            usableUpdates.tags = tagRefs;
+          }
+          if (updates.description) {
+            usableUpdates.description = updates.description;
+          }
           return from(this.firestore
                           .doc<GameResponse>(`${COLLECTIONS.GAMES}/${game.id}`)
-                          .update({
-                            description,
-                            modifiedUser: user.uid,
-                            dateModified: new Date()
-                          }));
+                          .update(usableUpdates));
         }));
   }
+
+  private setupTags(tags?: Tag[]|DocumentReference[]):
+      Observable<DocumentReference<TagResponse>[]> {
+    if (!tags || !tags.length) {
+      return of([]);
+    }
+    if ((tags[0] as DocumentReference).path) {
+      return of(tags as DocumentReference<TagResponse>[]);
+    }
+    const tagCreation: Observable<DocumentReference<TagResponse>>[] = [];
+    for (const tag of tags) {
+      if (!tag.id) {
+        tagCreation.push(this.tagService.createTag(tag));
+      } else {
+        tagCreation.push(
+            of(this.firestore.doc<TagResponse>(`${COLLECTIONS.TAGS}/${tag.id}`)
+                   .ref))
+      }
+    }
+    return combineLatest(tagCreation);
+  }
+
 
   /**
    * Creates a new game document in the database, including any new new tags and
@@ -348,18 +314,7 @@ export class GamesService {
 
           // Create any new tags, note their IDs.
           const tags = game.tags;
-          const tagCreation: Observable<DocumentReference<TagResponse>>[] = [];
-          for (const tag of tags) {
-            if (!tag.id) {
-              tagCreation.push(this.tagService.createTag(tag));
-            } else {
-              tagCreation.push(
-                  of(this.firestore
-                         .doc<TagResponse>(`${COLLECTIONS.TAGS}/${tag.id}`)
-                         .ref))
-            }
-          }
-          return combineLatest(tagCreation);
+          return this.setupTags(tags);
         }),
         switchMap(tagReferences => {
           // Set up the tag list and metadata document references.
