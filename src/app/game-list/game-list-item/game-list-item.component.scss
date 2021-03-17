@@ -169,28 +169,3 @@ mat-chip {
     margin-left: 0.5rem;
   }
 }
-
-.note-list {
-  .note {
-    margin-bottom: 2rem;
-
-    .description-wrapper {
-      margin: 0;
-    }
-
-    .label {
-      span {
-        vertical-align: middle;
-      }
-      mat-icon,
-      mat-chip {
-        vertical-align: middle;
-        margin: 0 0.5rem;
-      }
-    }
-    .username {
-      text-align: right;
-      width: 100%;
-    }
-  }
-}

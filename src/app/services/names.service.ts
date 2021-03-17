@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, DocumentReference} from '@angular/fire/firestore';
 import firebase from 'firebase/app';
-import {combineLatest, Observable} from 'rxjs';
+import {combineLatest, Observable, of} from 'rxjs';
 import {debounceTime, map, switchMap, take, tap} from 'rxjs/operators';
 import {COLLECTIONS} from '../shared/constants';
 import {BaseClass, BaseResponse, Game, GameResponse, Name, NameResponse, NameVoteResponse, User} from '../shared/types';
@@ -38,6 +38,9 @@ export class NamesService {
   fetchMyNameVotes(game: Game): Observable<NameVoteResponse[]> {
     return this.userService.user$
         .pipe(take(1), switchMap(user => {
+                if (!user) {
+                  return of([]);
+                }
                 return this.firestore
                     .collection<NameVoteResponse>(
                         `${COLLECTIONS.GAMES}/${game.id}/${

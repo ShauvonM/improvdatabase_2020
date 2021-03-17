@@ -1,0 +1,81 @@
+.note-list {
+  .note {
+    margin-bottom: 2rem;
+
+    .description-wrapper {
+      margin: 0;
+      position: relative;
+
+      .controls {
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        opacity: 0;
+        transition: opacity 200ms;
+      }
+
+      &:hover .controls {
+        opacity: 1;
+      }
+    }
+
+    .label {
+      span {
+        vertical-align: middle;
+      }
+      mat-icon,
+      mat-chip {
+        vertical-align: middle;
+        margin: 0 0.5rem;
+      }
+    }
+    .username {
+      text-align: right;
+      width: 100%;
+      font-style: italic;
+    }
+  }
+}
+
+h3 {
+  font-size: 1rem;
+
+  mat-hint {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: -0.5rem;
+  }
+}
+
+.add-note {
+  mat-form-field {
+    width: 100%;
+  }
+
+  mat-slide-toggle {
+    margin-top: 1rem;
+  }
+
+  .controls {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &.edit {
+    animation: flash 2s;
+    border-radius: 1rem;
+  }
+}
+
+@keyframes flash {
+  0% {
+    background: transparent;
+  }
+  10% {
+    background: #ffeb3b;
+  }
+  100% {
+    background: transparent;
+  }
+}

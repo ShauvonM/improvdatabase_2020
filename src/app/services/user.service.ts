@@ -107,8 +107,32 @@ export class UserService {
                            }));
   }
 
+  getBaseDeletionData(): Observable<Partial<BaseResponse>> {
+    const baseDeletionData: Partial<BaseResponse> = {
+      dateDeleted: new Date(),
+      deletedUser: null,
+      isDeleted: true
+    };
+    return this.user$.pipe(take(1), map(user => {
+                             baseDeletionData.deletedUser = user.uid;
+                             return baseDeletionData;
+                           }));
+  }
+
+  getBaseUpdateData(): Observable<Partial<BaseResponse>> {
+    const baseData:
+        Partial<BaseResponse> = {dateModified: new Date(), modifiedUser: null};
+    return this.user$.pipe(take(1), map(user => {
+                             baseData.modifiedUser = user.uid;
+                             return baseData;
+                           }));
+  }
+
   addUsersToResponse<Q extends BaseResponse, T extends BaseClass>(items: Q[]):
       Observable<T[]> {
+    if (!items || !items.length) {
+      return of([]);
+    }
     const allUsers: Observable<T>[] = [];
     for (const item of items) {
       const combine = [

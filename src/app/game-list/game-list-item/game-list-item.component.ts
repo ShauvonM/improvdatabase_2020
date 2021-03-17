@@ -12,10 +12,9 @@ import {TagsService} from 'src/app/services/tags.service';
 import {UserService} from 'src/app/services/user.service';
 import {createToggle} from 'src/app/shared/anim';
 import {SNACKBAR_DURATION_DEFAULT} from 'src/app/shared/constants';
-import {Game, GameMetadata, Name, NameVoteResponse, Note, Tag, User} from 'src/app/shared/types';
+import {Game, GameMetadata, Name, NameVoteResponse, Tag, User} from 'src/app/shared/types';
 import {MarkdownService} from '../../services/markdown.service';
 import {NamesService, NameVoteEffect} from '../../services/names.service';
-import {NoteService} from '../../services/note.service';
 
 
 @Component({
@@ -37,11 +36,8 @@ export class GameListItemComponent implements OnInit, OnDestroy {
     this.isEditDescriptionSaving = false;
   }
 
-  // game$: Observable<Game>;
   names$: Observable<Name[]>;
   nameVote$: Observable<NameVoteResponse[]>;
-  notes$: Observable<Note[]>;
-  // user$: Observable<firebase.User>;
 
   user?: User;
   userSubscription: Subscription;
@@ -57,7 +53,6 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   tagInputControl = new FormControl('');
   filteredTags$: Observable<Tag[]>;
   addedTags: string[] = [];
-  // selectedTags: Partial<Tag>[] = [];
 
   @ViewChild('tagInput') tagSearchInput: ElementRef<HTMLInputElement>;
 
@@ -66,17 +61,20 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   }
 
   get canEdit() {
-    return this.selected && this.user &&
+    return this.game && this.selected && this.user &&
         (this.user.superUser || this.game.addedUser.uid === this.user.uid);
   }
 
   get canAddTags() {
-    return this.selected && this.user;
+    return this.game && this.selected && this.user;
+  }
+
+  get icon() {
+    return this.gameService.getGameIcon(this.game);
   }
 
   constructor(
       private readonly gameService: GamesService,
-      private readonly noteService: NoteService,
       private readonly nameService: NamesService,
       private readonly tagService: TagsService,
       private readonly metadataService: GameMetadataService,
@@ -90,7 +88,6 @@ export class GameListItemComponent implements OnInit, OnDestroy {
     if (this.selected) {
       this.names$ = this.nameService.fetchNames(this.game);
       this.nameVote$ = this.nameService.fetchMyNameVotes(this.game);
-      this.notes$ = this.noteService.fetchNotes(this.game);
       this.userSubscription =
           this.userService.user$.subscribe(user => this.user = user);
 
@@ -118,38 +115,6 @@ export class GameListItemComponent implements OnInit, OnDestroy {
 
   renderMarkdown(str: string): string {
     return this.markdownService.convert(str);
-  }
-
-  getIcon(tags: Tag[]): string {
-    if (!tags || !tags.length) {
-      return '';
-    }
-    const tagStrings = tags.map(tag => tag.name);
-    if (tagStrings.includes('Show')) {
-      return 'local_activity';
-    }
-    if (tagStrings.includes('Exercise')) {
-      return 'emoji_objects';
-    }
-    if (tagStrings.includes('Warmup')) {
-      return 'local_fire_department';
-    }
-    return 'sports_kabaddi';
-  }
-
-  getIconDescription(tags: Tag[]): string {
-    switch (this.getIcon(tags)) {
-      case 'local_activity':
-        return 'A live performance style game.';
-      case 'local_fire_department':
-        return 'A warmup style game.';
-      case 'emoji_objects':
-        return 'An excercise to hone your craft.';
-      case 'sports_kabaddi':
-        return 'This game is not categorized, either by choice or laziness.';
-      default:
-        return 'We don\'t know what this means.';
-    }
   }
 
   /** Returns a string without any HTML tags in. */
@@ -206,6 +171,9 @@ export class GameListItemComponent implements OnInit, OnDestroy {
   }
 
   nameVote(existingVotes: NameVoteResponse[], name: Name) {
+    if (!this.user) {
+      return;
+    }
     this.nameService.voteForName(this.game, name, existingVotes).subscribe(effect => {
       let msg = '';
       switch (effect) {

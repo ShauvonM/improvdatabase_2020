@@ -14,15 +14,20 @@ import {MatInputModule} from '@angular/material/input';
 import {MatMenuModule} from '@angular/material/menu';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {SharedModule} from '../shared/shared.module';
 import {GameListItemComponent} from './game-list-item/game-list-item.component';
 import {GameListScreenComponent} from './game-list-screen.component';
+import {NoteListComponent} from './note-list/note-list.component';
+
 
 
 @NgModule({
-  declarations: [GameListScreenComponent, GameListItemComponent],
+  declarations:
+      [GameListScreenComponent, GameListItemComponent, NoteListComponent],
   imports: [
     CommonModule,        MatProgressSpinnerModule,
     MatChipsModule,      MatIconModule,
@@ -33,7 +38,8 @@ import {GameListScreenComponent} from './game-list-screen.component';
     MatFormFieldModule,  MatInputModule,
     MatSnackBarModule,   FormsModule,
     MatPaginatorModule,  MatAutocompleteModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule, MatSelectModule,
+    MatSlideToggleModule
   ]
 })
 export class GameListModule {

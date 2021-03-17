@@ -2,8 +2,9 @@
      [class.active]="selected"
      [class.list-item]="!selected">
   <div class="avatar"
-       [matTooltip]="getIconDescription(game.tags)">
-    <mat-icon>{{getIcon(game.tags)}}</mat-icon>
+       *ngIf="icon as i"
+       [matTooltip]="i.description">
+    <mat-icon>{{i.icon}}</mat-icon>
   </div>
 
   <div class="column">
@@ -148,17 +149,17 @@
 
                 <mat-chip *ngIf="!hasVotedForName(votes, name)"
                           [matBadge]="name.weight"
-                          [removable]="name.addedUser.uid === user.uid"
+                          [removable]="user && name.addedUser.uid === user.uid"
                           (removed)="removeName($event, name)"
                           (click)="nameVote(votes, name)">
                   {{name.name}}
                   <mat-icon matChipRemove
-                            *ngIf="name.addedUser.uid === user.uid">cancel</mat-icon>
+                            *ngIf="user && name.addedUser.uid === user.uid">cancel</mat-icon>
                 </mat-chip>
 
                 <mat-chip *ngIf="hasVotedForName(votes, name)"
                           [matBadge]="name.weight"
-                          [removable]="name.addedUser.uid === user.uid"
+                          [removable]="user && name.addedUser.uid === user.uid"
                           color="accent"
                           selected="true"
                           matTooltip="You voted for this one"
@@ -166,7 +167,7 @@
                           (click)="nameVote(votes, name)">
                   {{name.name}}
                   <mat-icon matChipRemove
-                            *ngIf="name.addedUser.uid === user.uid">cancel</mat-icon>
+                            *ngIf="user && name.addedUser.uid === user.uid">cancel</mat-icon>
                 </mat-chip>
 
               </ng-container>
@@ -184,8 +185,7 @@
           </ng-container>
         </mat-expansion-panel>
 
-        <mat-expansion-panel *ngIf="notes$ | async as notes"
-                             expanded="true"
+        <mat-expansion-panel expanded="true"
                              (opened)="notesOpenState = true"
                              (closed)="notesOpenState = false">
           <mat-expansion-panel-header>
@@ -194,28 +194,8 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
 
-          <div class="note-list">
-            <div class="note"
-                 *ngFor="let note of notes">
-              <div class="label">
-                <span>re:</span>
-                <mat-chip
-                          *ngIf="note.parentCollection === 'tags' || note.parentCollection === 'gamemetadatas'">
-                  {{note.parent.name}}
-                </mat-chip>
+          <app-note-list [game]="game"></app-note-list>
 
-                <ng-container *ngIf="note.parentCollection === 'games'">
-                  <mat-icon>{{getIcon(game.tags)}}</mat-icon> <span>{{note.parent.name}}</span>
-                </ng-container>
-              </div>
-
-              <div class="description"
-                   [innerHTML]="renderMarkdown(note.description)"></div>
-
-              <div class="username"
-                   *ngIf="note.addedUser"> - {{note.addedUser.name}}</div>
-            </div>
-          </div>
         </mat-expansion-panel>
 
       </mat-accordion>

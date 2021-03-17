@@ -47,9 +47,28 @@ export class GamesService {
     return this.selectedGameSlug_;
   }
 
-  // get filterChange$(): Observable<any> {
-  //   return this.filterChangeSubject.asObservable();
-  // }
+  getGameIcon(game: Game): {icon: string, description: string} {
+    let icon = 'sports_kabaddi'
+    let description =
+        'This game is not categorized, either by choice or laziness.';
+    if (game && game.tags && game.tags.length) {
+      const tags = game.tags;
+      const tagStrings = tags.map(tag => tag.name);
+      if (tagStrings.includes('Show')) {
+        icon = 'local_activity';
+        description = 'A live performance style game.';
+      }
+      if (tagStrings.includes('Exercise')) {
+        icon = 'emoji_objects';
+        description = 'An excercise to hone your craft.';
+      }
+      if (tagStrings.includes('Warmup')) {
+        icon = 'local_fire_department';
+        description = 'A warmup style game.';
+      }
+    }
+    return {icon, description};
+  }
 
   private populateGameData({games, metamap, tags}: {
     games: GameResponse[]; metamap: Map<string, GameMetadata>; tags: Tag[]

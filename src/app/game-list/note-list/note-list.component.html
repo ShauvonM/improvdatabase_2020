@@ -1,0 +1,96 @@
+<div class="note-list"
+     *ngIf="notes$ | async as notes">
+  <div class="note"
+       *ngFor="let note of notes">
+    <div class="label">
+      <span>re:</span>
+      <mat-chip
+                *ngIf="note.parentCollection === 'tags' || note.parentCollection === 'gamemetadatas'">
+        {{note.parent.name}}
+      </mat-chip>
+
+      <ng-container *ngIf="note.parentCollection === 'games'">
+        <mat-icon>{{gameIcon.icon}}</mat-icon> <span>{{note.parent.name}}</span>
+      </ng-container>
+    </div>
+
+    <div class="description-wrapper">
+      <div class="description"
+           [innerHTML]="renderMarkdown(note.description)"></div>
+
+      <div class="controls"
+           *ngIf="canEditNote(note)">
+        <button mat-icon-button
+                (click)="editNote(note)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button
+                (click)="deleteNote(note)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="username"
+         *ngIf="note.addedUser"> - {{note.public ? note.addedUser.name : 'Your private note'}} <br /> {{convertDate(note.addedDate) |
+      date}}</div>
+  </div>
+</div>
+
+<div class="add-note"
+     *ngIf="user"
+     [class.edit]="noteForm.controls.note.value">
+  <h3 *ngIf="!noteForm.controls.note.value">Add your own thoughts</h3>
+  <h3 *ngIf="noteForm.controls.note.value">
+    Edit your thoughts
+    <mat-hint *ngIf="noteForm.controls.note.value">
+      (if only we could do that everywhere, am I right?)
+    </mat-hint>
+  </h3>
+  <form [formGroup]="noteForm">
+
+    <mat-form-field appearance="standard">
+      <mat-label>This note is for</mat-label>
+      <mat-select formControlName="parent">
+        <mat-option [value]="game">The game <em>{{game.name}}</em></mat-option>
+        <mat-option [value]="game.duration">The duration {{game.duration.name}}</mat-option>
+        <mat-option [value]="game.playerCount">The player count {{game.playerCount.name}}
+        </mat-option>
+        <mat-option *ngFor="let tag of game.tags"
+                    [value]="tag">The tag "{{tag.name}}"</mat-option>
+      </mat-select>
+      <mat-hint *ngIf="noteForm.controls.parent.value.id === game.duration.id">This note will show
+        up under all games with this duration.</mat-hint>
+      <mat-hint *ngIf="noteForm.controls.parent.value.id === game.playerCount.id">This note will
+        show up under all games with this player count.</mat-hint>
+      <mat-hint *ngIf="tagIds.includes(noteForm.controls.parent.value.id)">This note will
+        show up under all games with this tag.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="standard">
+      <mat-label>Your thoughts</mat-label>
+      <textarea matInput
+                cdkTextareaAutosize
+                formControlName="description"></textarea>
+      <mat-hint>You can't use HTML, but you can use <a
+           href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown</a>!
+      </mat-hint>
+    </mat-form-field>
+
+    <mat-slide-toggle [formControl]="noteForm.controls.isPublic">Make this note public, for all to
+      see (otherwise it's just for your eyes only)</mat-slide-toggle>
+
+
+    <div class="controls">
+      <button mat-button
+              type="submit"
+              color="primary"
+              (click)="cancelNote()">Cancel</button>
+      <button mat-raised-button
+              type="submit"
+              [disabled]="!noteForm.valid || savingNote"
+              color="primary"
+              (click)="saveNote()">Save</button>
+    </div>
+  </form>
+</div>
