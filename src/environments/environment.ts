@@ -13,14 +13,19 @@ export const environment = {
     messagingSenderId: '540135102191',
     appId: '1:540135102191:web:cb263593d69ebd72a22d1a',
     measurementId: 'G-7P8PS1JE62'
+  },
+  algolia: {
+    appId: '9DDU24VIZ2',
+    searchKey: '18d5cc2791a5596df27cfc0a5142be60',
   }
 };
 
 /*
  * For easier debugging in development mode, you can import the following file
- * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.
+ * to ignore zone related error stack frames such as `zone.run`,
+ * `zoneDelegate.invokeTask`.
  *
- * This import should be commented out in production mode because it will have a negative impact
- * on performance if an error is thrown.
+ * This import should be commented out in production mode because it will have a
+ * negative impact on performance if an error is thrown.
  */
-import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+import 'zone.js/dist/zone-error'; // Included with Angular CLI.

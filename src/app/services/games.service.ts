@@ -32,7 +32,7 @@ export class GamesService {
       private readonly counterService: CounterService,
   ) {}
 
-  get filters(): (GameMetadata|Tag)[] {
+  get filters(): (GameMetadata|Partial<Tag>)[] {
     return [
       ...this.gameMetadataService.metadataFilters.values(),
       ...this.tagService.tagFilters.values()

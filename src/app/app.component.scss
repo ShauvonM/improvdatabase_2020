@@ -35,6 +35,12 @@ mat-toolbar {
     transition: background 200ms, color 200ms;
     color: white;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    margin-top: .75rem;
+    @include mat-elevation(0);
+    @include mat-elevation-transition;
 
     .search-input {
       padding: 0.5rem 1rem;
@@ -43,7 +49,33 @@ mat-toolbar {
     }
 
     .menu {
-      position: absolute;
+      // position: absolute;
+      // background: white;
+      width: 100%;
+      box-sizing: border-box;
+      // border-radius: 0 0 .5rem .5rem;
+      opacity: 0;
+      display: none;
+
+      label {
+        font-size: 1rem;
+        padding: .5rem 1rem 0;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        padding: .5rem 1rem;
+        cursor: pointer;
+
+        mat-icon {
+          margin-right: .5rem;
+        }
+
+        &:hover {
+          background: rgba(241, 243, 244, 0.24);
+        }
+      }
     }
 
     input {
@@ -66,9 +98,34 @@ mat-toolbar {
     &.focused {
       background: white;
       color: black;
+      @include mat-elevation(8);
 
       input {
         color: black;
+      }
+
+      .menu {
+        display: block;
+
+        label {
+          display: none;
+        }
+      }
+    }
+
+    &.has-results {
+      .menu {
+        opacity: 1;
+        max-height: 80vh;
+        overflow: auto;
+
+        label {
+          display: block;
+        }
+
+        ::ng-deep strong {
+          color: $color-primary;
+        }
       }
     }
   }

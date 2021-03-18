@@ -9,23 +9,36 @@
 
   <span class="spacer"></span>
 
-  <!-- <div class="search-container"
-       [class.focused]="searchFocused">
+  <div class="search-container"
+       [class.focused]="searchFocused || searchControl.value"
+       [class.has-results]="gameSearchResults.length">
     <div class="search-input">
       <mat-icon>search</mat-icon>
       <input (focus)="searchFocused = true"
              (blur)="searchFocused = false"
-             (keyup)="searchInput($event)"
              type="text"
              placeholder="Search the database"
-             [(ngModel)]="searchInputText">
+             [formControl]="searchControl">
     </div>
 
     <div class="menu">
+      <label *ngIf="gameSearchResults.length">Games:</label>
       <div class="menu-item"
-           mat-menu-item>Search is coming soon!</div>
+           *ngFor="let game of gameSearchResults"
+           (click)="searchControl.reset()"
+           [routerLink]="'/games/' + game.slug">
+        <mat-icon>{{game.icon}}</mat-icon>
+        <span [innerHTML]="game.name"></span>
+      </div>
+      <label *ngIf="tagSearchResults.length">Tags:</label>
+      <div class="menu-item"
+           *ngFor="let tag of tagSearchResults"
+           (click)="selectTagSearchResult(tag)">
+        <mat-icon>sell</mat-icon>
+        <span [innerHTML]="tag.name"></span>
+      </div>
     </div>
-  </div> -->
+  </div>
 </mat-toolbar>
 
 <div class="main">

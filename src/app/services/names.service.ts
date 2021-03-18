@@ -87,6 +87,7 @@ export class NamesService {
         map(() => {
           if (name.name === game.name) {
             // You just deleted the name for this game, dingus.
+            // TODO: Move this to a cloud function.
             this.fetchNames(game).pipe(take(1)).subscribe(names => {
               this.updateGameName(game, names, uid);
             });

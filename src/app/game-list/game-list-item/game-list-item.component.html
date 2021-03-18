@@ -150,7 +150,7 @@
                 <mat-chip *ngIf="!hasVotedForName(votes, name)"
                           [matBadge]="name.weight"
                           [removable]="user && name.addedUser.uid === user.uid"
-                          (removed)="removeName($event, name)"
+                          (removed)="removeName(name)"
                           (click)="nameVote(votes, name)">
                   {{name.name}}
                   <mat-icon matChipRemove

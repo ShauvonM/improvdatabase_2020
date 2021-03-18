@@ -38,7 +38,7 @@ export class GameListScreenComponent extends ScreenDirective {
   isRandom = false;
   canAddGames = false;
 
-  get filters(): (GameMetadata|Tag)[] {
+  get filters(): (GameMetadata|Partial<Tag>)[] {
     return this.gameService.filters;
   }
 

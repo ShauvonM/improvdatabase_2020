@@ -13,8 +13,8 @@ export class TagsService {
   private tagmap = new Map<string, Observable<Tag>>();
   private tagLoaded$ = new BehaviorSubject<void>(null);
 
-  private tagFilters_ = new Set<Tag>();
-  private tagFilter$: BehaviorSubject<Tag[]>;
+  private tagFilters_ = new Set<Partial<Tag>>();
+  private tagFilter$: BehaviorSubject<Partial<Tag>[]>;
 
   private tags$: Observable<Tag[]>;
 
@@ -26,7 +26,8 @@ export class TagsService {
     if (storageFilters) {
       this.tagFilters_ = new Set(storageFilters.tagFilters as Tag[]);
     }
-    this.tagFilter$ = new BehaviorSubject<Tag[]>([...this.tagFilters.values()]);
+    this.tagFilter$ =
+        new BehaviorSubject<Partial<Tag>[]>([...this.tagFilters.values()]);
   }
 
   get tagFilters() {
@@ -37,7 +38,7 @@ export class TagsService {
     return this.tagFilter$.asObservable();
   }
 
-  addTagFilter(selection: Tag) {
+  addTagFilter(selection: Partial<Tag>) {
     this.tagFilters.add(selection);
     this.tagFilter$.next([...this.tagFilters.values()]);
   }
