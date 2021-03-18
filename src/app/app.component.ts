@@ -9,39 +9,10 @@ import {environment} from 'src/environments/environment';
 import {LoginDialogComponent} from './login-dialog/login-dialog.component';
 import {TagsService} from './services/tags.service';
 import {UserService} from './services/user.service';
+import {loginString, logoutString} from './shared/constants';
 import {User} from './shared/types';
 
 const TOOBLAR_ACTIVE_POSITION = 16 * 4;
-
-const LOGIN_STRINGS = [
-  'about',          'below',   'excepting',   'toward',
-  'above',          'beneath', 'for',         'on',
-  'across',         'beside',  'from',        'onto',
-  'after',          'between', 'in',          'until',
-  'against',        'beyond',  'in front of', 'up',
-  'along',          'but',     'inside',      'upon',
-  'among',          'by',      'in spite of', 'past',
-  'up to',          'around',  'concerning',  'instead of',
-  'regarding',      'with',    'at ',         'into',
-  'since',          'within',  'because of',  'like',
-  'through',        'during',  'near',        'throughout',
-  'with regard to', 'of',      'to',          'with respect to',
-];
-
-const LOGOUT_STRINGS = [
-  'out',
-  'off',
-  'outside',
-  'underneath',
-  'under',
-  'without',
-  'over',
-  'despite',
-  'down',
-  'except',
-  'behind',
-  'before',
-];
 
 @Component({
   selector: 'app-root',
@@ -81,11 +52,9 @@ export class AppComponent {
           this.toolbarActive = pos > TOOBLAR_ACTIVE_POSITION;
         });
 
-    this.loginString = 'Log ' +
-        LOGIN_STRINGS[Math.floor(Math.random() * LOGIN_STRINGS.length)];
+    this.loginString = loginString();
 
-    this.logoutString = 'Log ' +
-        LOGOUT_STRINGS[Math.floor(Math.random() * LOGOUT_STRINGS.length)];
+    this.logoutString = logoutString();
 
     this.userService.user$.subscribe(user => {
       console.log('user', user);
